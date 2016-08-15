@@ -19,6 +19,11 @@ Features
 * Graceful stop for TCP and HTTP servers.
 * Signal handlers.
 
+Requirements
+------------
+
+Go 1.7 or better.
+
 Specifications
 --------------
 
