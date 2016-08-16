@@ -7,9 +7,12 @@ Logging
 The framework uses [cybozu-go/log][log] for structured logging, and
 provides command-line flags to configure logging.
 
-If a command-line flag is used to write logs to an external file, the
-framework installs SIGUSR1 signal handler to reopen the file to work with
-external log rotation programs.
+The framework also provides `LogConfig` struct that is initialized
+by the command-line flags through `NewLogConfig` function, and has
+`Apply()` method to apply logging configurations.
+
+Since `LogConfig` is annotated with struct tags for JSON and TOML,
+users may load configurations from JSON or TOML file.
 
 HTTP Server
 -----------
@@ -21,6 +24,11 @@ We extend [http.Server](https://golang.org/pkg/net/http/#Server) for:
     `http.Server.ConnState` callback can be used to track active
     connections.  By counting active connections (until it becomes zero),
     we can gracefully stop the server.
+
+    Unfortunately, `ConnState` callback cannot determine whether a
+    connection was `StateActive` or not when the state changes to
+    `StateClosed`.  We need to implement a tracking logic for connection
+    statuses.
 
 2. Better logging
 
@@ -37,29 +45,46 @@ We extend [http.Server](https://golang.org/pkg/net/http/#Server) for:
 
 To implement these, the framework provides this function:
 
-* `HTTPServer(serv *http.Server, logger *log.Logger) *http.Server`
+* `HTTPServer(serv *http.Server, al *log.Logger) *http.Server`
 
     This function makes a shallow copy of serv and replaces `Handler`,
     `ConnState`, and `ErrorLog` with functions that implement
     aforementioned specifications.  The `Handler` in `serv` will be
     wrapped and hence must be non-nil.
 
-    If `logger` is non-nil, it is used to output access logs.
-    If `logger` is nil, the default logger is used.
-    Note that `logger` is a [cybozu-go/log][log]'s [Logger](https://godoc.org/github.com/cybozu-go/log#Logger).
+    If `al` is non-nil, it is used to output access logs.
+    If `al` is nil, the default logger is used.
 
 Context
 -------
 
 The framework creates a single **base context** that will be canceled
-upon signals and/or errors.
+when `Stop()` is called.  `Stop()` is described later.
+
+Signal handlers
+---------------
+
+The framework implicitly starts a goroutine to handle SIGINT and SIGTERM.
+The goroutine, when such a signal is sent, will call `Stop()` described
+below.
+
+If a command-line flag is used to write logs to an external file, the
+framework starts SIGUSR1 signal handler to reopen the file to work with
+external log rotation programs.
+
+Related functions:
+
+* `IsSignaled() bool`
+
+    This function returns `true` if `Stop()` was called by SIGINT/SIGTERM
+    signal handlers.
 
 Goroutine management
 --------------------
 
-The framework provides a few functions to manage goroutines:
+The framework provides following functions to manage goroutines:
 
-* `Stop()`
+* `Stop(err error)`
 
     This function cancels the base context and closes all managed
     listeners.  Once `Stop()` is called, calls for `Go()` and
@@ -68,7 +93,7 @@ The framework provides a few functions to manage goroutines:
 * `Go(f func(ctx context.Context) error) error`
 
     This function starts a goroutine that executes `f`.  If `f` returns
-    non-nil error, the framework calls `Stop()`.
+    non-nil error, the framework calls `Stop()` with that error.
     `ctx` is the base context.
 
 * `Serve(l net.Listener, s Server) error`
@@ -79,9 +104,9 @@ The framework provides a few functions to manage goroutines:
 
 * `Wait() error`
 
-    This function waits for SIGINT or SIGTERM signal.
-    If such a signal is received, it calls `Stop()` and waits all managed
-    goroutines to finish.
+    This function waits for `Stop()` being called and then waits for
+    all managed goroutines to finish.  The return value will be the error
+    that was passed to `Stop()`.
 
 
 [log]: https://github.com/cybozu-go/log/

@@ -15,7 +15,7 @@ Features
 --------
 
 * Logging options.
-* Context-based goroutine management.
+* [Context](https://golang.org/pkg/context/)-based goroutine management.
 * Graceful stop for TCP and HTTP servers.
 * Signal handlers.
 
@@ -27,7 +27,7 @@ Go 1.7 or better.
 Specifications
 --------------
 
-Commands using this framework implement:
+Commands using this framework implement these features:
 
 ### Command-line options
 
@@ -47,12 +47,12 @@ Commands using this framework implement:
 
 ### Signal Handlers
 
-* `SIGUSER1`
+* `SIGUSR1`
 
-    If `-logfile` is specified, this signal make the program reopn
+    If `-logfile` is specified, this signal make the program reopen
     the log file to cooperate with an external log rotation program.
 
-*  `SIGINT` and `SIGTERM`
+* `SIGINT` and `SIGTERM`
 
     These signals cancel the context and hence goroutines and
     gracefully stop TCP and HTTP servers if any, then terminate
