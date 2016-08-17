@@ -13,6 +13,9 @@ import (
 
 const (
 	defaultHTTPReadTimeout = 30 * time.Second
+
+	// our request tracking header.
+	uuidHeaderName = "X-Cybozu-Request-ID"
 )
 
 // HTTPServer is a wrapper for http.Server.
@@ -41,8 +44,9 @@ type HTTPServer struct {
 	// The global environment is used if Env is nil.
 	Env *Environment
 
-	handler http.Handler
-	wg      sync.WaitGroup
+	handler  http.Handler
+	wg       sync.WaitGroup
+	initOnce sync.Once
 }
 
 type logResponseWriter struct {
@@ -71,22 +75,26 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	s.handler.ServeHTTP(lw, r.WithContext(ctx))
 
-	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 	fields := map[string]interface{}{
-		log.FnHTTPStatusCode: lw.status,
+		log.FnAccessLog:      true,
 		log.FnResponseTime:   time.Since(startTime).Seconds(),
+		log.FnProtocol:       r.Proto,
+		log.FnHTTPStatusCode: lw.status,
 		log.FnHTTPMethod:     r.Method,
 		log.FnURL:            r.RequestURI,
 		log.FnHTTPHost:       r.Host,
-		log.FnRemoteAddress:  ip,
 		log.FnRequestSize:    r.ContentLength,
 		log.FnResponseSize:   lw.size,
+	}
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		fields[log.FnRemoteAddress] = ip
 	}
 	ua := r.Header.Get("User-Agent")
 	if len(ua) > 0 {
 		fields[log.FnHTTPUserAgent] = ua
 	}
-	reqid := r.Header.Get("X-Cybozu-Request-ID")
+	reqid := r.Header.Get(uuidHeaderName)
 	if len(reqid) > 0 {
 		fields[log.FnRequestID] = reqid
 	}
@@ -98,7 +106,7 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case 400 <= lw.status:
 		lv = log.LvWarn
 	}
-	s.AccessLog.Log(lv, "cmd:http: "+http.StatusText(lw.status), fields)
+	s.AccessLog.Log(lv, "cmd: "+http.StatusText(lw.status), fields)
 }
 
 func (s *HTTPServer) init() {
@@ -140,7 +148,23 @@ func (s *HTTPServer) wait(ctx context.Context) error {
 	// shorten keep-alive timeout
 	s.Server.ReadTimeout = 100 * time.Millisecond
 	s.Server.SetKeepAlivesEnabled(false)
-	s.wg.Wait()
+
+	if s.ShutdownTimeout == 0 {
+		s.wg.Wait()
+		return nil
+	}
+
+	ch := make(chan struct{})
+	go func() {
+		s.wg.Wait()
+		close(ch)
+	}()
+
+	select {
+	case <-ch:
+	case <-time.After(s.ShutdownTimeout):
+		log.Warn("cmd: timeout waiting for shutdown", nil)
+	}
 	return nil
 }
 
@@ -149,9 +173,12 @@ func (s *HTTPServer) wait(ctx context.Context) error {
 // Unlike the original, this method returns immediately just after
 // starting a goroutine to accept connections.
 //
+// The framework automatically closes l when the environment's Stop
+// is called.
+//
 // Serve always returns nil.
 func (s *HTTPServer) Serve(l net.Listener) error {
-	s.init()
+	s.initOnce.Do(s.init)
 
 	go func() {
 		<-s.Env.ctx.Done()
@@ -222,7 +249,7 @@ func (s *HTTPServer) ListenAndServeTLS(certFile, keyFile string) error {
 	}
 
 	config := &tls.Config{
-		NextProtos:               []string{"http/1.1", "h2"},
+		NextProtos:               []string{"h2", "http/1.1"},
 		Certificates:             []tls.Certificate{cert},
 		PreferServerCipherSuites: true,
 		ClientSessionCache:       tls.NewLRUClientSessionCache(0),

@@ -41,6 +41,8 @@ type Server struct {
 // Serve itself returns immediately.  The goroutine continues
 // to accept and handle connections until the base context is
 // canceled.
+//
+// l will be closed automatically when the environment's Stop is called.
 func (s *Server) Serve(l net.Listener) {
 	env := s.Env
 	if env == nil {
@@ -56,7 +58,7 @@ func (s *Server) Serve(l net.Listener) {
 		for {
 			conn, err := l.Accept()
 			if err != nil {
-				log.Debug("Listener.Accept error", map[string]interface{}{
+				log.Debug("cmd: Listener.Accept error", map[string]interface{}{
 					"addr":  l.Addr().String(),
 					"error": err.Error(),
 				})
@@ -77,19 +79,20 @@ func (s *Server) Serve(l net.Listener) {
 }
 
 func (s *Server) wait() {
+	if s.ShutdownTimeout == 0 {
+		s.wg.Wait()
+		return
+	}
+
 	ch := make(chan struct{})
 	go func() {
 		s.wg.Wait()
 		close(ch)
 	}()
 
-	if s.ShutdownTimeout == 0 {
-		<-ch
-		return
-	}
-
 	select {
 	case <-ch:
 	case <-time.After(s.ShutdownTimeout):
+		log.Warn("cmd: timeout waiting for shutdown", nil)
 	}
 }

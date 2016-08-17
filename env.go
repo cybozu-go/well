@@ -31,6 +31,11 @@ func NewEnvironment() *Environment {
 	return e
 }
 
+// Context returns the base context of the environment.
+func (e *Environment) Context() context.Context {
+	return e.ctx
+}
+
 // Stop cancels the base context.
 //
 // Passed err will be returned by Wait().

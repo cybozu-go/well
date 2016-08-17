@@ -14,8 +14,8 @@ var (
 	errSignaled = errors.New("signaled")
 )
 
-// IsSignaled returns true if err indicates that the program has
-// received SIGINT or SIGTERM.
+// IsSignaled returns true if err returned by Wait indicates that
+// the program has received SIGINT or SIGTERM.
 func IsSignaled(err error) bool {
 	return err == errSignaled
 }
