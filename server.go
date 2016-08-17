@@ -22,8 +22,8 @@ type Server struct {
 	// canceled when Handler returns.
 	Handler func(ctx context.Context, conn net.Conn)
 
-	// ShutdownTimeout is the timeout duration before the managed
-	// goroutine started by Serve returns leaving active connections.
+	// ShutdownTimeout is the maximum duration the server waits for
+	// all connections to be closed before shutdown.
 	//
 	// Zero duration disables timeout.
 	ShutdownTimeout time.Duration

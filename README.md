@@ -16,8 +16,9 @@ Features
 
 * Logging options.
 * [Context](https://golang.org/pkg/context/)-based goroutine management.
-* Graceful stop for TCP and HTTP servers.
 * Signal handlers.
+* Graceful stop for network servers.
+* Enhanced [http.Server](https://golang.org/pkg/net/http/#Server).
 
 Requirements
 ------------

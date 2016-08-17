@@ -79,14 +79,18 @@ As to [http.Server](https://golang.org/pkg/net/http/#Server), we extend it for:
 
 1. Graceful server termination
 
-    `http.Server.ConnState` callback can be used to track active
-    connections.  By counting active connections (until it becomes zero),
-    we can gracefully stop the server.
+    `http.Server` can gracefully shutdown by the following steps:
 
-    Unfortunately, `ConnState` callback cannot determine whether a
-    connection was `StateActive` or not when the state changes to
-    `StateClosed`.  We need to implement a tracking logic for connection
-    statuses.
+    1. Set `ReadTimeout` non-zero value.
+    2. Call `SetKeepAlivesEnabled(false)`.
+    3. Close all listeners.
+    4. Wait all connections to be closed.
+
+    Note that `ReadTimeout` can work as keep-alive timeout according
+    to the go source code (at least as of Go 1.7).
+
+    For 4, `http.Server.ConnState` callback can be used to track
+    connection status.
 
 2. Better logging
 
