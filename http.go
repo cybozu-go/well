@@ -76,7 +76,7 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.handler.ServeHTTP(lw, r.WithContext(ctx))
 
 	fields := map[string]interface{}{
-		log.FnAccessLog:      true,
+		log.FnType:           "access",
 		log.FnResponseTime:   time.Since(startTime).Seconds(),
 		log.FnProtocol:       r.Proto,
 		log.FnHTTPStatusCode: lw.status,
