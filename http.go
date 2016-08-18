@@ -48,6 +48,10 @@ type HTTPServer struct {
 	handler  http.Handler
 	wg       sync.WaitGroup
 	timedout int32
+
+	mu        sync.Mutex
+	idleConns map[net.Conn]struct{}
+
 	initOnce sync.Once
 }
 
@@ -116,6 +120,8 @@ func (s *HTTPServer) init() {
 		return
 	}
 
+	s.idleConns = make(map[net.Conn]struct{}, 10000)
+
 	if s.Server.Handler == nil {
 		panic("Handler must not be nil")
 	}
@@ -125,6 +131,14 @@ func (s *HTTPServer) init() {
 		s.Server.ReadTimeout = defaultHTTPReadTimeout
 	}
 	s.Server.ConnState = func(c net.Conn, state http.ConnState) {
+		s.mu.Lock()
+		if state == http.StateIdle {
+			s.idleConns[c] = struct{}{}
+		} else {
+			delete(s.idleConns, c)
+		}
+		s.mu.Unlock()
+
 		if state == http.StateNew {
 			s.wg.Add(1)
 			return
@@ -147,9 +161,14 @@ func (s *HTTPServer) init() {
 func (s *HTTPServer) wait(ctx context.Context) error {
 	<-ctx.Done()
 
-	// shorten keep-alive timeout
-	s.Server.ReadTimeout = 100 * time.Millisecond
 	s.Server.SetKeepAlivesEnabled(false)
+
+	// interrupt conn.Read for idle connections.
+	s.mu.Lock()
+	for conn := range s.idleConns {
+		conn.SetReadDeadline(time.Now())
+	}
+	s.mu.Unlock()
 
 	if s.ShutdownTimeout == 0 {
 		s.wg.Wait()

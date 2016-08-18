@@ -81,16 +81,20 @@ As to [http.Server](https://golang.org/pkg/net/http/#Server), we extend it for:
 
     `http.Server` can gracefully shutdown by the following steps:
 
-    1. Set `ReadTimeout` non-zero value.
+    1. Close all listeners.
     2. Call `SetKeepAlivesEnabled(false)`.
-    3. Close all listeners.
+    3. Call `net.Conn.SetReadDeadline(time.Now())` for all idle connections.
     4. Wait all connections to be closed.
 
-    Note that `ReadTimeout` can work as keep-alive timeout according
-    to the go source code (at least as of Go 1.7).
-
-    For 4, `http.Server.ConnState` callback can be used to track
+    For 3 and 4, `http.Server.ConnState` callback can be used to track
     connection status.
+
+    Note that `ReadTimeout` can work as keep-alive timeout according
+    to the go source code (at least as of Go 1.7).  Since keep-alived
+    connections may block on `conn.Read` to wait for the next request,
+    we need to cancel `conn.Read` for quicker shutdown.
+
+    c.f. https://groups.google.com/forum/#!topic/golang-nuts/5E4gM7EzdLw
 
 2. Better logging
 
