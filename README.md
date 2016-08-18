@@ -53,11 +53,15 @@ Commands using this framework implement these features:
     If `-logfile` is specified, this signal make the program reopen
     the log file to cooperate with an external log rotation program.
 
+    On Windows, this is not implemented.
+
 * `SIGINT` and `SIGTERM`
 
     These signals cancel the context and hence goroutines and
     gracefully stop TCP and HTTP servers if any, then terminate
     the program.
+
+    On Windows, only `SIGINT` is handled.
 
 Usage
 -----

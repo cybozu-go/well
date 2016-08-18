@@ -4,7 +4,6 @@ import (
 	"errors"
 	"flag"
 	"path/filepath"
-	"syscall"
 
 	"github.com/cybozu-go/log"
 )
@@ -49,7 +48,7 @@ func (c *LogConfig) Apply() error {
 		if err != nil {
 			return err
 		}
-		w, err := log.NewFileReopener(abspath, syscall.SIGUSR1)
+		w, err := openLogFile(abspath)
 		if err != nil {
 			return err
 		}
