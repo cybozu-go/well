@@ -5,7 +5,6 @@ import (
 	"errors"
 	"os"
 	"os/signal"
-	"syscall"
 
 	"github.com/cybozu-go/log"
 )
@@ -22,7 +21,7 @@ func IsSignaled(err error) bool {
 
 func handleSignal(ctx context.Context, e *Environment) {
 	ch := make(chan os.Signal, 2)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(ch, stopSignals...)
 
 	go func() {
 		select {
