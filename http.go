@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/cybozu-go/log"
@@ -46,6 +47,7 @@ type HTTPServer struct {
 
 	handler  http.Handler
 	wg       sync.WaitGroup
+	timedout int32
 	initOnce sync.Once
 }
 
@@ -164,8 +166,15 @@ func (s *HTTPServer) wait(ctx context.Context) error {
 	case <-ch:
 	case <-time.After(s.ShutdownTimeout):
 		log.Warn("cmd: timeout waiting for shutdown", nil)
+		atomic.StoreInt32(&s.timedout, 1)
 	}
 	return nil
+}
+
+// TimedOut returns true if the server shut down before all connections
+// got closed.
+func (s *HTTPServer) TimedOut() bool {
+	return atomic.LoadInt32(&s.timedout) != 0
 }
 
 // Serve overrides http.Server's Serve method.

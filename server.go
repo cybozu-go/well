@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/cybozu-go/log"
@@ -33,7 +34,8 @@ type Server struct {
 	// The global environment is used if Env is nil.
 	Env *Environment
 
-	wg sync.WaitGroup
+	wg       sync.WaitGroup
+	timedout int32
 }
 
 // Serve starts a managed goroutine to accept connections.
@@ -94,5 +96,12 @@ func (s *Server) wait() {
 	case <-ch:
 	case <-time.After(s.ShutdownTimeout):
 		log.Warn("cmd: timeout waiting for shutdown", nil)
+		atomic.StoreInt32(&s.timedout, 1)
 	}
+}
+
+// TimedOut returns true if the server shut down before all connections
+// got closed.
+func (s *Server) TimedOut() bool {
+	return atomic.LoadInt32(&s.timedout) != 0
 }
