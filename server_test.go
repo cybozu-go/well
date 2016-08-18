@@ -13,8 +13,7 @@ import (
 func listen(port int, t *testing.T) net.Listener {
 	l, err := net.Listen("tcp", "localhost:"+strconv.Itoa(port))
 	if err != nil {
-		t.Log(err)
-		t.Skip()
+		t.Skip(err)
 	}
 	return l
 }
@@ -28,6 +27,8 @@ func connect(port int, t *testing.T) net.Conn {
 }
 
 func TestServer(t *testing.T) {
+	t.Parallel()
+
 	l := listen(15555, t)
 	handler := func(ctx context.Context, conn net.Conn) {
 		conn.Write([]byte{'h', 'e', 'l', 'l', 'o'})
@@ -66,6 +67,8 @@ func TestServer(t *testing.T) {
 }
 
 func TestServerTimeout(t *testing.T) {
+	t.Parallel()
+
 	l := listen(15556, t)
 	handler := func(ctx context.Context, conn net.Conn) {
 		conn.Write([]byte{'h', 'e', 'l', 'l', 'o'})
