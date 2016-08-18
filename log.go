@@ -9,9 +9,10 @@ import (
 )
 
 var (
+	// empty default values indicates unspecified condition.
 	logFilename = flag.String("logfile", "", "Log filename")
-	logLevel    = flag.String("loglevel", "info", "Log level [critical,error,warning,info,debug]")
-	logFormat   = flag.String("logformat", "plain", "Log format [plain,logfmt,json]")
+	logLevel    = flag.String("loglevel", "", "Log level [critical,error,warning,info,debug]")
+	logFormat   = flag.String("logformat", "", "Log format [plain,logfmt,json]")
 )
 
 // LogConfig configures cybozu-go/log's default logger.
@@ -40,7 +41,7 @@ func (c *LogConfig) Apply() error {
 	logger := log.DefaultLogger()
 
 	filename := c.Filename
-	if flag.Lookup("logfile") != nil {
+	if len(*logFilename) > 0 {
 		filename = *logFilename
 	}
 	if len(filename) > 0 {
@@ -56,7 +57,7 @@ func (c *LogConfig) Apply() error {
 	}
 
 	level := c.Level
-	if flag.Lookup("loglevel") != nil {
+	if len(*logLevel) > 0 {
 		level = *logLevel
 	}
 	if len(level) == 0 {
@@ -68,7 +69,7 @@ func (c *LogConfig) Apply() error {
 	}
 
 	format := c.Format
-	if flag.Lookup("logformat") != nil {
+	if len(*logFormat) > 0 {
 		format = *logFormat
 	}
 	switch format {

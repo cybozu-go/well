@@ -1,0 +1,7 @@
+{
+    "log": {
+        "filename": "/abc/def",
+        "level": "debug",
+        "format": "json"
+    }
+}
