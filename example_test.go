@@ -76,8 +76,6 @@ func Example_rest() {
 
 // Load logging configurations from TOML file.
 func ExampleLogConfig() {
-	flag.Parse()
-
 	// compile-time defaults
 	config := &cmd.LogConfig{
 		Level:  "error",
@@ -91,6 +89,7 @@ func ExampleLogConfig() {
 	}
 
 	// Apply gives priority to command-line flags, if any.
+	flag.Parse()
 	err = config.Apply()
 	if err != nil {
 		log.ErrorExit(err)
