@@ -37,7 +37,7 @@ type LogConfig struct {
 // Apply applies configurations to the default logger.
 //
 // Command-line flags take precedence over the struct member values.
-func (c *LogConfig) Apply() error {
+func (c LogConfig) Apply() error {
 	logger := log.DefaultLogger()
 
 	filename := c.Filename
