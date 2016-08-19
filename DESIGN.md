@@ -27,7 +27,9 @@ The framework provides following functions to manage goroutines:
 
     This function starts a goroutine that executes `f`.  If `f` returns
     non-nil error, the framework calls `Stop()` with that error.
-    `ctx` is the base context.
+
+    `ctx` is a derived context from the base context that is to be
+    canceled when f returns.
 
 * `Stop(err error)`
 

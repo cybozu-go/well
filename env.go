@@ -76,13 +76,17 @@ func (e *Environment) Wait() error {
 
 // Go starts a goroutine that executes f.
 //
+// f takes a drived context from the base context.  The context
+// will be canceled when f returns.
+//
 // Goroutines started by this function will be waited for by
 // Wait until all such goroutines return.
 //
-// If f returns non-nil error, Stop is called with that error.
+// If f returns non-nil error, Stop is called immediately
+// with that error.
 //
 // f should watch ctx.Done() channel and return quickly when the
-// channel is canceled.
+// channel is closed.
 func (e *Environment) Go(f func(ctx context.Context) error) {
 	e.mu.RLock()
 	if e.stopped {
@@ -93,7 +97,9 @@ func (e *Environment) Go(f func(ctx context.Context) error) {
 	e.mu.RUnlock()
 
 	go func() {
-		err := f(e.ctx)
+		ctx, cancel := context.WithCancel(e.ctx)
+		defer cancel()
+		err := f(ctx)
 		if err != nil {
 			e.Stop(err)
 		}
