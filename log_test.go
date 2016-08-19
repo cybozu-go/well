@@ -65,7 +65,7 @@ func TestLogConfigApply(t *testing.T) {
 
 	c := &LogConfig{
 		Filename: "",
-		Level:    "debug",
+		Level:    "info",
 		Format:   "json",
 	}
 
@@ -75,8 +75,8 @@ func TestLogConfigApply(t *testing.T) {
 	}
 
 	logger := log.DefaultLogger()
-	if logger.Threshold() != log.LvDebug {
-		t.Error(`logger.Threshold() != log.LvDebug`)
+	if logger.Threshold() != log.LvInfo {
+		t.Error(`logger.Threshold() != log.LvInfo`)
 	}
 	if logger.Formatter().String() != "json" {
 		t.Error(`logger.Formatter().String() != "json"`)
@@ -94,6 +94,17 @@ func TestLogConfigApply(t *testing.T) {
 	if err == nil {
 		t.Error(c.Level + " should cause an error")
 	}
+}
+
+func TestLogFlags(t *testing.T) {
+	t.Parallel()
+	t.Skip("this test redirects log outputs to a temp file.")
+
+	c := &LogConfig{
+		Filename: "",
+		Level:    "info",
+		Format:   "json",
+	}
 
 	f, err := ioutil.TempFile("", "gotest")
 	if err != nil {
@@ -102,7 +113,7 @@ func TestLogConfigApply(t *testing.T) {
 	f.Close()
 
 	flag.Set("logfile", f.Name())
-	flag.Set("loglevel", "error")
+	flag.Set("loglevel", "debug")
 	flag.Set("logformat", "plain")
 
 	err = c.Apply()
@@ -110,8 +121,10 @@ func TestLogConfigApply(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if logger.Threshold() != log.LvError {
-		t.Error(`logger.Threshold() != log.LvError`)
+	logger := log.DefaultLogger()
+
+	if logger.Threshold() != log.LvDebug {
+		t.Error(`logger.Threshold() != log.LvDebug`)
 	}
 	if logger.Formatter().String() != "plain" {
 		t.Error(`logger.Formatter().String() != "plain"`)

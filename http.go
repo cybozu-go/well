@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"crypto/tls"
+	"io"
 	"net"
 	"net/http"
 	"sync"
@@ -55,20 +56,37 @@ type HTTPServer struct {
 	initOnce sync.Once
 }
 
-type logResponseWriter struct {
+type writerString interface {
+	WriteString(data string) (int, error)
+}
+
+// StdResponseWriter is the interface implemented by
+// the ResponseWriter from http.Server.
+//
+// HTTPServer's ResponseWriter implements this as well.
+type StdResponseWriter interface {
 	http.ResponseWriter
+	io.ReaderFrom
+	http.Flusher
+	http.CloseNotifier
+	http.Hijacker
+	writerString
+}
+
+type logResponseWriter struct {
+	StdResponseWriter
 	status int
-	size   int
+	size   int64
 }
 
 func (w *logResponseWriter) WriteHeader(status int) {
 	w.status = status
-	w.ResponseWriter.WriteHeader(status)
+	w.StdResponseWriter.WriteHeader(status)
 }
 
 func (w *logResponseWriter) Write(data []byte) (int, error) {
-	n, err := w.ResponseWriter.Write(data)
-	w.size += n
+	n, err := w.StdResponseWriter.Write(data)
+	w.size += int64(n)
 	return n, err
 }
 
@@ -76,7 +94,7 @@ func (w *logResponseWriter) Write(data []byte) (int, error) {
 func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 
-	lw := &logResponseWriter{w, http.StatusOK, 0}
+	lw := &logResponseWriter{w.(StdResponseWriter), http.StatusOK, 0}
 	ctx, cancel := context.WithCancel(s.Env.ctx)
 	defer cancel()
 	s.handler.ServeHTTP(lw, r.WithContext(ctx))
@@ -120,7 +138,7 @@ func (s *HTTPServer) init() {
 		return
 	}
 
-	s.idleConns = make(map[net.Conn]struct{}, 10000)
+	s.idleConns = make(map[net.Conn]struct{}, 100000)
 
 	if s.Server.Handler == nil {
 		panic("Handler must not be nil")
@@ -163,23 +181,37 @@ func (s *HTTPServer) wait(ctx context.Context) error {
 
 	s.Server.SetKeepAlivesEnabled(false)
 
-	// interrupt conn.Read for idle connections.
-	s.mu.Lock()
-	for conn := range s.idleConns {
-		conn.SetReadDeadline(time.Now())
-	}
-	s.mu.Unlock()
-
-	if s.ShutdownTimeout == 0 {
-		s.wg.Wait()
-		return nil
-	}
-
 	ch := make(chan struct{})
+
+	// Interrupt conn.Read for idle connections.
+	//
+	// This must be run inside for-loop to catch connections
+	// going idle at critical timing to acquire s.mu
+	go func() {
+	AGAIN:
+		s.mu.Lock()
+		for conn := range s.idleConns {
+			conn.SetReadDeadline(time.Now())
+		}
+		s.mu.Unlock()
+		select {
+		case <-ch:
+			return
+		default:
+		}
+		time.Sleep(10 * time.Millisecond)
+		goto AGAIN
+	}()
+
 	go func() {
 		s.wg.Wait()
 		close(ch)
 	}()
+
+	if s.ShutdownTimeout == 0 {
+		<-ch
+		return nil
+	}
 
 	select {
 	case <-ch:
