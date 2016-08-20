@@ -86,6 +86,18 @@ func (w *logResponseWriter) Write(data []byte) (int, error) {
 	return n, err
 }
 
+func (w *logResponseWriter) ReadFrom(r io.Reader) (int64, error) {
+	n, err := w.StdResponseWriter.ReadFrom(r)
+	w.size += n
+	return n, err
+}
+
+func (w *logResponseWriter) WriteString(data string) (int, error) {
+	n, err := w.StdResponseWriter.WriteString(data)
+	w.size += int64(n)
+	return n, err
+}
+
 // ServeHTTP implements http.Handler interface.
 func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
