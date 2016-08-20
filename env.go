@@ -24,8 +24,8 @@ type Environment struct {
 //
 // This function installs a signal handler that calls Cancel when
 // SIGINT or SIGTERM is sent.
-func NewEnvironment() *Environment {
-	ctx, cancel := context.WithCancel(context.Background())
+func NewEnvironment(ctx context.Context) *Environment {
+	ctx, cancel := context.WithCancel(ctx)
 	e := &Environment{
 		ctx:    ctx,
 		cancel: cancel,

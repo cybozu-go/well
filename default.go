@@ -7,7 +7,7 @@ var (
 )
 
 func init() {
-	defaultEnv = NewEnvironment()
+	defaultEnv = NewEnvironment(context.Background())
 }
 
 // Context returns the base context of the global environment.

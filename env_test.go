@@ -9,7 +9,7 @@ import (
 func TestEnvironmentStop(t *testing.T) {
 	t.Parallel()
 
-	env := NewEnvironment()
+	env := NewEnvironment(context.Background())
 	waitCh := make(chan struct{})
 
 	env.Go(func(ctx context.Context) error {
@@ -31,7 +31,7 @@ func TestEnvironmentStop(t *testing.T) {
 func TestEnvironmentError(t *testing.T) {
 	t.Parallel()
 
-	env := NewEnvironment()
+	env := NewEnvironment(context.Background())
 
 	testError := errors.New("test")
 
@@ -61,7 +61,7 @@ func TestEnvironmentError(t *testing.T) {
 func TestEnvironmentGo(t *testing.T) {
 	t.Parallel()
 
-	env := NewEnvironment()
+	env := NewEnvironment(context.Background())
 
 	testError := errors.New("test")
 

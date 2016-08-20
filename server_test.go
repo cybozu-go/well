@@ -38,7 +38,7 @@ func TestServer(t *testing.T) {
 		//time.Sleep(2 * time.Second)
 	}
 
-	env := NewEnvironment()
+	env := NewEnvironment(context.Background())
 	s := &Server{
 		Handler: handler,
 		Env:     env,
@@ -76,7 +76,7 @@ func TestServerTimeout(t *testing.T) {
 		time.Sleep(1 * time.Second)
 	}
 
-	env := NewEnvironment()
+	env := NewEnvironment(context.Background())
 	s := &Server{
 		Handler:         handler,
 		ShutdownTimeout: 100 * time.Millisecond,

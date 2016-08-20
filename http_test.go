@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -40,7 +41,7 @@ func newHTTPClient() *http.Client {
 func TestHTTPServer(t *testing.T) {
 	t.Parallel()
 
-	env := NewEnvironment()
+	env := NewEnvironment(context.Background())
 	logger := log.NewLogger()
 	out := new(bytes.Buffer)
 	logger.SetOutput(out)
@@ -164,7 +165,7 @@ func testAccessLog(r io.Reader, t *testing.T) {
 func TestHTTPServerTimeout(t *testing.T) {
 	t.Parallel()
 
-	env := NewEnvironment()
+	env := NewEnvironment(context.Background())
 	sleepCh := make(chan struct{})
 	s := &HTTPServer{
 		Server: &http.Server{
