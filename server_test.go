@@ -55,7 +55,7 @@ func TestServer(t *testing.T) {
 		t.Error(`!bytes.Equal(buf, []byte{'h', 'e', 'l', 'l', 'o'})`)
 	}
 
-	env.Stop(nil)
+	env.Cancel(nil)
 	err = env.Wait()
 	if err != nil {
 		t.Error(err)
@@ -94,7 +94,7 @@ func TestServerTimeout(t *testing.T) {
 		t.Error(`!bytes.Equal(buf, []byte{'h', 'e', 'l', 'l', 'o'})`)
 	}
 
-	env.Stop(nil)
+	env.Cancel(nil)
 	err = env.Wait()
 	if err != nil {
 		t.Error(err)

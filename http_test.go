@@ -22,7 +22,7 @@ func newMux(env *Environment, sleepCh chan struct{}) http.Handler {
 		time.Sleep(1 * time.Second)
 	})
 	mux.HandleFunc("/shutdown", func(w http.ResponseWriter, r *http.Request) {
-		env.Stop(nil)
+		env.Cancel(nil)
 	})
 	return mux
 }

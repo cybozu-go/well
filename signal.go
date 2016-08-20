@@ -28,7 +28,7 @@ func handleSignal(ctx context.Context, e *Environment) {
 		case <-ctx.Done():
 			return
 		case s := <-ch:
-			if !e.Stop(errSignaled) {
+			if !e.Cancel(errSignaled) {
 				return
 			}
 			log.Warn("cmd: got signal", map[string]interface{}{

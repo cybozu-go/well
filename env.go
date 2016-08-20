@@ -11,15 +11,19 @@ import (
 type Environment struct {
 	ctx    context.Context
 	cancel context.CancelFunc
-	stopCh chan struct{}
 	wg     sync.WaitGroup
 
-	mu      sync.RWMutex
-	stopped bool
-	err     error
+	mu       sync.RWMutex
+	stopped  bool
+	stopCh   chan struct{}
+	canceled bool
+	err      error
 }
 
 // NewEnvironment creates a new Environment.
+//
+// This function installs a signal handler that calls Cancel when
+// SIGINT or SIGTERM is sent.
 func NewEnvironment() *Environment {
 	ctx, cancel := context.WithCancel(context.Background())
 	e := &Environment{
@@ -36,51 +40,65 @@ func (e *Environment) Context() context.Context {
 	return e.ctx
 }
 
-func (e *Environment) stop(err error) bool {
+// Stop just declares no further Go will be called.
+//
+// Calling Stop is optional if and only if Cancel is guaranteed
+// to be called at some point.  For instance, if the program runs
+// until SIGINT or SIGTERM, Stop is optional.
+func (e *Environment) Stop() {
+	e.mu.Lock()
+
+	if !e.stopped {
+		e.stopped = true
+		close(e.stopCh)
+	}
+
+	e.mu.Unlock()
+}
+
+// Cancel cancels the base context.
+//
+// Passed err will be returned by Wait().
+// Once canceled, Go() will not start new goroutines.
+//
+// Note that calling Cancel(nil) is perfectly valid.
+// Unlike Stop(), Cancel(nil) cancels the base context and can
+// gracefully stop goroutines started by Server.Serve or
+// HTTPServer.ListenAndServe.
+//
+// This returns true if the caller is the first that calls Cancel.
+// For second and later calls, Cancel does nothing and returns false.
+func (e *Environment) Cancel(err error) bool {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	if e.stopped {
+	if e.canceled {
 		return false
+	}
+	e.canceled = true
+	e.err = err
+	e.cancel()
+
+	if e.stopped {
+		return true
 	}
 
 	e.stopped = true
-	e.err = err
-	close(e.stopCh) // unleash Wait()
+	close(e.stopCh)
 	return true
 }
 
-// StopNoCancel just declares no further Go is called.
+// Wait waits for Stop or Cancel, and for all goroutines started by
+// Go to finish.
 //
-// This returns true if the caller is the first that calls Stop
-// or StopNoCancel.
-func (e *Environment) StopNoCancel() bool {
-	return e.stop(nil)
-}
-
-// Stop cancels the base context.
-//
-// Passed err will be returned by Wait().
-// Once stopped, Go() will not start new goroutines.
-//
-// This returns true if the caller is the first that calls Stop
-// or StopNoCancel.  For second and later calls, Stop does nothing
-// and returns false.
-func (e *Environment) Stop(err error) bool {
-	e.cancel()
-	return e.stop(err)
-}
-
-// Wait waits for Stop or StopNoCancel being called.
-//
-// The returned err is the one passed to Stop.
+// The returned err is the one passed to Cancel, or nil.
 // err can be tested by IsSignaled to determine whether the
 // program got SIGINT or SIGTERM.
 func (e *Environment) Wait() error {
 	<-e.stopCh
 	log.Info("cmd: waiting for all goroutines to complete", nil)
 	e.wg.Wait()
-	e.cancel() // in case for StopNoCancel
+	e.cancel() // in case no one calls Cancel
 
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -96,7 +114,7 @@ func (e *Environment) Wait() error {
 // Goroutines started by this function will be waited for by
 // Wait until all such goroutines return.
 //
-// If f returns non-nil error, Stop is called immediately
+// If f returns non-nil error, Cancel is called immediately
 // with that error.
 //
 // f should watch ctx.Done() channel and return quickly when the
@@ -115,7 +133,7 @@ func (e *Environment) Go(f func(ctx context.Context) error) {
 		defer cancel()
 		err := f(ctx)
 		if err != nil {
-			e.Stop(err)
+			e.Cancel(err)
 		}
 		e.wg.Done()
 	}()

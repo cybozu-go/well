@@ -229,7 +229,7 @@ func (s *HTTPServer) TimedOut() bool {
 // Unlike the original, this method returns immediately just after
 // starting a goroutine to accept connections.
 //
-// The framework automatically closes l when the environment's Stop
+// The framework automatically closes l when the environment's Cancel
 // is called.
 //
 // Serve always returns nil.
@@ -265,7 +265,8 @@ func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
 // ListenAndServe overrides http.Server's method.
 //
 // Unlike the original, this method returns immediately just after
-// starting a goroutine to accept connections.
+// starting a goroutine to accept connections.  To stop listening,
+// call the environment's Cancel.
 //
 // ListenAndServe returns non-nil error if and only if net.Listen failed.
 func (s *HTTPServer) ListenAndServe() error {
@@ -283,7 +284,8 @@ func (s *HTTPServer) ListenAndServe() error {
 // ListenAndServeTLS overrides http.Server's method.
 //
 // Unlike the original, this method returns immediately just after
-// starting a goroutine to accept connections.
+// starting a goroutine to accept connections.  To stop listening,
+// call the environment's Cancel.
 //
 // Another difference from the original is that certFile and keyFile
 // must be specified.  If not, configure http.Server.TLSConfig

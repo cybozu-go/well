@@ -26,8 +26,8 @@ func Example_basic() {
 	// some more Go
 	//cmd.Go(func(ctx context.Context) error {})
 
-	// Stop signals no more Go is used.
-	cmd.Stop(nil)
+	// Stop declares no Go calls will be made from this point.
+	cmd.Stop()
 
 	// Wait waits for all goroutines started by Go to complete,
 	// or one of such goroutine returns non-nil error.
@@ -66,6 +66,7 @@ func Example_rest() {
 	}
 
 	// Wait waits for SIGINT or SIGTERM.
+	// In this case, cmd.Stop can be omitted.
 	err = cmd.Wait()
 
 	// Use IsSignaled to determine err is the result of a signal.

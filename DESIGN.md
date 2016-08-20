@@ -26,12 +26,20 @@ The framework provides following functions to manage goroutines:
 * `Go(f func(ctx context.Context) error)`
 
     This function starts a goroutine that executes `f`.  If `f` returns
-    non-nil error, the framework calls `Stop()` with that error.
+    non-nil error, the framework calls `Cancel()` with that error.
 
     `ctx` is a derived context from the base context that is to be
     canceled when f returns.
 
-* `Stop(err error)`
+* `Stop()`
+
+    This function just declares no further `Go()` will be called.
+
+    Calling `Stop()` is optional if and only if `Cancel()` is
+    guaranteed to be called at some point.  For instance, if the
+    program runs until SIGINT or SIGTERM, `Stop()` is optional.
+
+* `Cancel(err error)`
 
     This function cancels the base context and closes all managed
     listeners.  After `Stop()`, `Go()` will not start new goroutines

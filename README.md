@@ -1,3 +1,4 @@
+[![GitHub release](https://img.shields.io/github/release/cybozu-go/cmd.svg?maxAge=60)][releases]
 [![GoDoc](https://godoc.org/github.com/cybozu-go/cmd?status.svg)][godoc]
 [![Build Status](https://travis-ci.org/cybozu-go/cmd.svg?branch=master)](https://travis-ci.org/cybozu-go/cmd)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/cmd)](https://goreportcard.com/report/github.com/cybozu-go/cmd)
@@ -66,12 +67,13 @@ Commands using this framework implement these features:
 Usage
 -----
 
-Read [the documentation][godoc].
+Read [the design notes](DESIGN.md) and [godoc][].
 
 License
 -------
 
 [MIT][]
 
+[releases]: https://github.com/cybozu-go/cmd/releases
 [godoc]: https://godoc.org/github.com/cybozu-go/cmd
 [MIT]: https://opensource.org/licenses/MIT

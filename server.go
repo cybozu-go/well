@@ -53,7 +53,7 @@ type Server struct {
 // automatically enabled.
 //
 // The listener l will be closed automatically when the environment's
-// Stop is called.
+// Cancel is called.
 func (s *Server) Serve(l net.Listener) {
 	env := s.Env
 	if env == nil {

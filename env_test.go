@@ -6,6 +6,28 @@ import (
 	"testing"
 )
 
+func TestEnvironmentStop(t *testing.T) {
+	t.Parallel()
+
+	env := NewEnvironment()
+	waitCh := make(chan struct{})
+
+	env.Go(func(ctx context.Context) error {
+		return nil
+	})
+	env.Go(func(ctx context.Context) error {
+		<-waitCh
+		return nil
+	})
+
+	env.Stop()
+	close(waitCh)
+	err := env.Wait()
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestEnvironmentError(t *testing.T) {
 	t.Parallel()
 
@@ -31,7 +53,7 @@ func TestEnvironmentError(t *testing.T) {
 	})
 
 	<-waitCh
-	env.Stop(testError)
+	env.Cancel(testError)
 
 	<-stopCh
 }
