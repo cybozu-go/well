@@ -36,14 +36,7 @@ func (e *Environment) Context() context.Context {
 	return e.ctx
 }
 
-// Stop cancels the base context.
-//
-// Passed err will be returned by Wait().
-// Once stopped, Go() will not start new goroutines.
-//
-// This returns true if the caller is the first that calls Stop.
-// For second and later calls, Stop does nothing and returns false.
-func (e *Environment) Stop(err error) bool {
+func (e *Environment) stop(err error) bool {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -53,12 +46,32 @@ func (e *Environment) Stop(err error) bool {
 
 	e.stopped = true
 	e.err = err
-	e.cancel()
 	close(e.stopCh) // unleash Wait()
 	return true
 }
 
-// Wait waits for Stop being called.
+// StopNoCancel just declares no further Go is called.
+//
+// This returns true if the caller is the first that calls Stop
+// or StopNoCancel.
+func (e *Environment) StopNoCancel() bool {
+	return e.stop(nil)
+}
+
+// Stop cancels the base context.
+//
+// Passed err will be returned by Wait().
+// Once stopped, Go() will not start new goroutines.
+//
+// This returns true if the caller is the first that calls Stop
+// or StopNoCancel.  For second and later calls, Stop does nothing
+// and returns false.
+func (e *Environment) Stop(err error) bool {
+	e.cancel()
+	return e.stop(err)
+}
+
+// Wait waits for Stop or StopNoCancel being called.
 //
 // The returned err is the one passed to Stop.
 // err can be tested by IsSignaled to determine whether the
@@ -67,6 +80,7 @@ func (e *Environment) Wait() error {
 	<-e.stopCh
 	log.Info("cmd: waiting for all goroutines to complete", nil)
 	e.wg.Wait()
+	e.cancel() // in case for StopNoCancel
 
 	e.mu.Lock()
 	defer e.mu.Unlock()

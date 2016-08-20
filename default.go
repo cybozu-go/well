@@ -15,18 +15,27 @@ func Context() context.Context {
 	return defaultEnv.Context()
 }
 
+// StopNoCancel just declares no further Go is called.
+//
+// This returns true if the caller is the first that calls Stop
+// or StopNoCancel.
+func StopNoCancel() bool {
+	return defaultEnv.StopNoCancel()
+}
+
 // Stop cancels the base context of the global environment.
 //
 // Passed err will be returned by Wait().
 // Once stopped, Go() will not start new goroutines.
 //
-// This returns true if the caller is the first that calls Stop.
-// For second and later calls, Stop does nothing and returns false.
+// This returns true if the caller is the first that calls Stop
+// or StopNoCancel.  For second and later calls, Stop does nothing
+// and returns false.
 func Stop(err error) bool {
 	return defaultEnv.Stop(err)
 }
 
-// Wait waits for Stop being called.
+// Wait waits for Stop or StopNoCancel being called.
 //
 // The returned err is the one passed to Stop.
 // err can be tested by IsSignaled to determine whether the
