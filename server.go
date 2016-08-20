@@ -23,6 +23,11 @@ type Server struct {
 	// canceled when Handler returns.
 	Handler func(ctx context.Context, conn net.Conn)
 
+	// TCPKeepAlivePeriod is the duration for TCP keep-alive.
+	// If not zero, and the listener given to Serve accepts TCP,
+	// TCP keep-alive is turned on with the given period.
+	TCPKeepAlivePeriod time.Duration
+
 	// ShutdownTimeout is the maximum duration the server waits for
 	// all connections to be closed before shutdown.
 	//
@@ -44,7 +49,11 @@ type Server struct {
 // to accept and handle connections until the base context is
 // canceled.
 //
-// l will be closed automatically when the environment's Stop is called.
+// If the listener returns a TCP connection, TCP keep-alive is
+// automatically enabled.
+//
+// The listener l will be closed automatically when the environment's
+// Stop is called.
 func (s *Server) Serve(l net.Listener) {
 	env := s.Env
 	if env == nil {
@@ -66,6 +75,12 @@ func (s *Server) Serve(l net.Listener) {
 				})
 				goto OUT
 			}
+
+			if tc, ok := conn.(*net.TCPConn); ok && s.TCPKeepAlivePeriod > 0 {
+				tc.SetKeepAlive(true)
+				tc.SetKeepAlivePeriod(s.TCPKeepAlivePeriod)
+			}
+
 			s.wg.Add(1)
 			go func() {
 				ctx, cancel := context.WithCancel(ctx)

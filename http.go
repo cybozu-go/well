@@ -56,10 +56,6 @@ type HTTPServer struct {
 	initOnce sync.Once
 }
 
-type writerString interface {
-	WriteString(data string) (int, error)
-}
-
 // StdResponseWriter is the interface implemented by
 // the ResponseWriter from http.Server.
 //
@@ -70,7 +66,7 @@ type StdResponseWriter interface {
 	http.Flusher
 	http.CloseNotifier
 	http.Hijacker
-	writerString
+	WriteString(data string) (int, error)
 }
 
 type logResponseWriter struct {

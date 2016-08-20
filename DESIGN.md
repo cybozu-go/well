@@ -34,8 +34,8 @@ The framework provides following functions to manage goroutines:
 * `Stop(err error)`
 
     This function cancels the base context and closes all managed
-    listeners.  Once `Stop()` is called, calls for `Go()` and
-    `Serve()` will fail with non-nil error.
+    listeners.  After `Stop()`, `Go()` will not start new goroutines
+    any longer.
 
 * `Wait() error`
 
@@ -68,11 +68,11 @@ Suppose that we create a simple TCP server on this framework.
 
 A naive idea is to use `Go()` to start goroutines for every accepted
 connections.  However, since `Go()` acquires a package global mutex,
-this idea would limit concurrency of the server.
+such an implementation would limit concurrency of the server.
 
 In order to implement high performance servers, the server should
 manage all goroutines started by the server by itself.  The framework
-provides such an implementation.
+provides `Server` as a generic implementation of such servers.
 
 HTTP Server
 -----------
@@ -100,16 +100,15 @@ As to [http.Server](https://golang.org/pkg/net/http/#Server), we extend it for:
 
 2. Better logging
 
-    Use [cybozu-go/log][log] for structured
-    logging of error messages, and output access logs by wrapping
-    `http.Server.Handler`.
+    Use [cybozu-go/log][log] for structured logging of error messages,
+    and output access logs by wrapping `http.Server.Handler`.
 
 3. Cancel running handlers
 
-    Since Go 1.7, http.Request has Context() that returns a context
-    that will be canceled when Handler.ServeHTTP() returns.  The framework
-    replaces the context so that the context is also canceled when the
-    server is about to stop in addition to the original behavior.
+    Since Go 1.7, `http.Request` has `Context()` that returns a context
+    that will be canceled when `Handler.ServeHTTP()` returns.  The
+    framework replaces the context so that the context is also canceled
+    when the server is about to stop in addition to the original behavior.
 
 To implement these, the framework provides a wrapping struct:
 
