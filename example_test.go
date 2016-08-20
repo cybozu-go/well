@@ -37,8 +37,8 @@ func Example_basic() {
 	}
 }
 
-// REST API server that stops gracefully.
-func Example_rest() {
+// HTTP server that stops gracefully.
+func Example_http() {
 	flag.Parse() // must precedes LogConfig.Apply
 	cmd.LogConfig{}.Apply()
 
@@ -95,4 +95,30 @@ func ExampleLogConfig() {
 	if err != nil {
 		log.ErrorExit(err)
 	}
+}
+
+// Sub environment to barrier wait goroutines.
+func ExampleNewEnvironment() {
+	// env is a sub environment of the global environment.
+	env := cmd.NewEnvironment(cmd.Context())
+
+	env.Go(func(ctx context.Context) error {
+		// do something
+		return nil
+	})
+	// some more env.Go()
+
+	// wait all goroutines started by env.Go().
+	// These goroutines may also be canceled when the global
+	// environment is canceled.
+	env.Stop()
+	err := env.Wait()
+	if err != nil {
+		log.ErrorExit(err)
+	}
+
+	// another sub environment for another barrier.
+	env = cmd.NewEnvironment(cmd.Context())
+
+	// env.Go, env.Stop, and env.Wait again.
 }
