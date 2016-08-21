@@ -42,20 +42,20 @@ The framework provides following functions to manage goroutines:
 * `Cancel(err error)`
 
     This function cancels the base context and closes all managed
-    listeners.  After `Stop()`, `Go()` will not start new goroutines
+    listeners.  After `Cancel()`, `Go()` will not start new goroutines
     any longer.
 
 * `Wait() error`
 
-    This function waits for `Stop()` being called and then waits for
-    all managed goroutines to finish.  The return value will be the error
-    that was passed to `Stop()`.
+    This function waits for `Stop()` or `Cancel()` being called and then
+    waits for all managed goroutines to finish.  The return value will be
+    the error that was passed to `Cancel()`, or nil.
 
 Signal handlers
 ---------------
 
 The framework implicitly starts a goroutine to handle SIGINT and SIGTERM.
-The goroutine, when such a signal is sent, will call `Stop()` with an
+The goroutine, when such a signal is sent, will call `Cancel()` with an
 error indicating SIGINT or SIGTERM is got.
 
 If a command-line flag is used to write logs to an external file, the
