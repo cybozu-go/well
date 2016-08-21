@@ -111,6 +111,7 @@ func TestLogFlags(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.Close()
+	defer os.Remove(f.Name())
 
 	flag.Set("logfile", f.Name())
 	flag.Set("loglevel", "debug")
