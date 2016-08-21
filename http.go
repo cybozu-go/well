@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/netutil"
 )
 
 const (
@@ -248,6 +249,8 @@ func (s *HTTPServer) TimedOut() bool {
 func (s *HTTPServer) Serve(l net.Listener) error {
 	s.initOnce.Do(s.init)
 
+	l = netutil.KeepAliveListener(l)
+
 	go func() {
 		<-s.Env.ctx.Done()
 		l.Close()
@@ -258,20 +261,6 @@ func (s *HTTPServer) Serve(l net.Listener) error {
 	}()
 
 	return nil
-}
-
-type tcpKeepAliveListener struct {
-	*net.TCPListener
-}
-
-func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
-	tc, err := ln.AcceptTCP()
-	if err != nil {
-		return
-	}
-	tc.SetKeepAlive(true)
-	tc.SetKeepAlivePeriod(3 * time.Minute)
-	return tc, nil
 }
 
 // ListenAndServe overrides http.Server's method.
@@ -290,7 +279,7 @@ func (s *HTTPServer) ListenAndServe() error {
 	if err != nil {
 		return err
 	}
-	return s.Serve(tcpKeepAliveListener{ln.(*net.TCPListener)})
+	return s.Serve(ln)
 }
 
 // ListenAndServeTLS overrides http.Server's method.
@@ -331,6 +320,6 @@ func (s *HTTPServer) ListenAndServeTLS(certFile, keyFile string) error {
 		return err
 	}
 
-	tlsListener := tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, config)
+	tlsListener := tls.NewListener(ln, config)
 	return s.Serve(tlsListener)
 }

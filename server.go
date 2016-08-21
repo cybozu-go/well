@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/netutil"
 )
 
 // Server is a generic network server that accepts connections
@@ -49,8 +50,8 @@ type Server struct {
 // to accept and handle connections until the base context is
 // canceled.
 //
-// If the listener returns a TCP connection, TCP keep-alive is
-// automatically enabled.
+// If the listener is *net.TCPListener, TCP keep-alive is automatically
+// enabled.
 //
 // The listener l will be closed automatically when the environment's
 // Cancel is called.
@@ -59,6 +60,8 @@ func (s *Server) Serve(l net.Listener) {
 	if env == nil {
 		env = defaultEnv
 	}
+
+	l = netutil.KeepAliveListener(l)
 
 	go func() {
 		<-env.ctx.Done()
@@ -74,11 +77,6 @@ func (s *Server) Serve(l net.Listener) {
 					"error": err.Error(),
 				})
 				goto OUT
-			}
-
-			if tc, ok := conn.(*net.TCPConn); ok && s.TCPKeepAlivePeriod > 0 {
-				tc.SetKeepAlive(true)
-				tc.SetKeepAlivePeriod(s.TCPKeepAlivePeriod)
 			}
 
 			s.wg.Add(1)
