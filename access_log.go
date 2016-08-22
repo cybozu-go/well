@@ -23,5 +23,5 @@ type AccessLog struct {
 	ResponseLength int64   `json:"response_size"`
 	RemoteAddr     string  `json:"remote_ipaddr"`
 	UserAgent      string  `json:"http_user_agent"`
-	RequestID      string  `json:"id"`
+	RequestID      string  `json:"request_id"`
 }
