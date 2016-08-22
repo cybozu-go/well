@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"path/filepath"
@@ -84,4 +85,16 @@ func (c LogConfig) Apply() error {
 	}
 
 	return nil
+}
+
+// FieldsFromContext returns a map of fields containing
+// context information.  Currently, request ID field is
+// included, if any.
+func FieldsFromContext(ctx context.Context) map[string]interface{} {
+	m := make(map[string]interface{})
+	v := ctx.Value(RequestIDContextKey)
+	if v != nil {
+		m[log.FnRequestID] = v.(string)
+	}
+	return m
 }
