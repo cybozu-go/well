@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"os"
 	"os/signal"
@@ -19,13 +18,13 @@ func IsSignaled(err error) bool {
 	return err == errSignaled
 }
 
-func handleSignal(ctx context.Context, e *Environment) {
+func handleSignal(e *Environment) {
 	ch := make(chan os.Signal, 2)
 	signal.Notify(ch, stopSignals...)
 
 	go func() {
 		select {
-		case <-ctx.Done():
+		case <-e.Context().Done():
 			return
 		case s := <-ch:
 			if !e.Cancel(errSignaled) {

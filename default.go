@@ -8,6 +8,7 @@ var (
 
 func init() {
 	defaultEnv = NewEnvironment(context.Background())
+	handleSignal(defaultEnv)
 }
 
 // Context returns the base context of the global environment.

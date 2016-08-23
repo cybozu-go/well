@@ -31,7 +31,6 @@ func NewEnvironment(ctx context.Context) *Environment {
 		cancel: cancel,
 		stopCh: make(chan struct{}),
 	}
-	handleSignal(ctx, e)
 	return e
 }
 
