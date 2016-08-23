@@ -12,6 +12,10 @@ func init() {
 }
 
 // Context returns the base context of the global environment.
+//
+// In almost all cases, you should use Go rather than this to obtain
+// a context because goroutines started by Go can be synchronized by
+// Wait.  Be warned.
 func Context() context.Context {
 	return defaultEnv.Context()
 }
@@ -59,10 +63,11 @@ func Wait() error {
 // Goroutines started by this function will be waited for by
 // Wait until all such goroutines return.
 //
-// If f returns non-nil error, Cancel is called with that error.
+// If f returns non-nil error, Cancel is called immediately
+// with that error.
 //
 // f should watch ctx.Done() channel and return quickly when the
-// channel is canceled.
+// channel is closed.
 func Go(f func(ctx context.Context) error) {
 	defaultEnv.Go(f)
 }

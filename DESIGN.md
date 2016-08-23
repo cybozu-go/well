@@ -1,6 +1,8 @@
 Design notes
 ============
 
+**Be warned that statements here may not be correct nor up-to-date.**
+
 Logging
 -------
 
@@ -12,16 +14,12 @@ JSON or [TOML][] file, and configures the default logger according to
 the struct member values.  The command-line flags take precedence
 over the member values, if specified.
 
-Context
--------
+Context and `Environment`
+-------------------------
 
-The framework creates a single **base context** that will be canceled
-when `Cancel()` is called.  `Cancel()` is described later.
+[Context](https://blog.golang.org/context) itself is quite useful.
 
-Goroutine management
---------------------
-
-The framework provides following functions to manage goroutines:
+`Environment` adds a bit more usefulness to context with these methods:
 
 * `Go(f func(ctx context.Context) error)`
 
@@ -51,23 +49,26 @@ The framework provides following functions to manage goroutines:
     waits for all managed goroutines to finish.  The return value will be
     the error that was passed to `Cancel()`, or nil.
 
+Basically, an environment can be considered as a barrier synchronizer.
+
+### The global environment
+
+The framework creates and provides a global environment.
+
+It also installs a signal handler as described in the next section.
+
 Signal handlers
 ---------------
 
 The framework implicitly starts a goroutine to handle SIGINT and SIGTERM.
-The goroutine, when such a signal is sent, will call `Cancel()` with an
-error indicating SIGINT or SIGTERM is got.
+The goroutine, when such a signal is sent, will call the global
+environment's `Cancel()` with a special error value.
+
+The error value can be identified by `IsSignaled` function.
 
 If a command-line flag is used to write logs to an external file, the
-framework starts SIGUSR1 signal handler to reopen the file to work with
-external log rotation programs.
-
-Related functions:
-
-* `IsSignaled(err error) bool`
-
-    This function returns `true` if `err` returned from `Wait()` is
-    a result of SIGINT/SIGTERM handlers.
+framework installs SIGUSR1 signal handler to reopen the file to work
+with external log rotation programs.
 
 Generic server
 --------------
@@ -75,8 +76,8 @@ Generic server
 Suppose that we create a simple TCP server on this framework.
 
 A naive idea is to use `Go()` to start goroutines for every accepted
-connections.  However, since `Go()` acquires a package global mutex,
-such an implementation would limit concurrency of the server.
+connections.  However, since `Go()` acquires mutex, such an
+implementation would limit concurrency of the server.
 
 In order to implement high performance servers, the server should
 manage all goroutines started by the server by itself.  The framework

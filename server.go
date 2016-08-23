@@ -24,11 +24,6 @@ type Server struct {
 	// canceled when Handler returns.
 	Handler func(ctx context.Context, conn net.Conn)
 
-	// TCPKeepAlivePeriod is the duration for TCP keep-alive.
-	// If not zero, and the listener given to Serve accepts TCP,
-	// TCP keep-alive is turned on with the given period.
-	TCPKeepAlivePeriod time.Duration
-
 	// ShutdownTimeout is the maximum duration the server waits for
 	// all connections to be closed before shutdown.
 	//

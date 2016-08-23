@@ -159,7 +159,7 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case 400 <= lw.status:
 		lv = log.LvWarn
 	}
-	s.AccessLog.Log(lv, "cmd: "+http.StatusText(lw.status), fields)
+	s.AccessLog.Log(lv, "cmd: access", fields)
 }
 
 func (s *HTTPServer) init() {

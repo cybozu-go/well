@@ -59,9 +59,9 @@ Commands using this framework implement these external specifications:
 
 * `SIGINT` and `SIGTERM`
 
-    These signals cancel the context and hence goroutines and
-    gracefully stop TCP and HTTP servers if any, then terminate
-    the program.
+    These signals cancel the context of the global environment,
+    and hence goroutines registered with the environment.  Usually
+    this will result in graceful stop of network servers, if any.
 
     On Windows, only `SIGINT` is handled.
 

@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - HTTPServer adds request tracking ID to the request context if the request has "X-Cybozu-Request-ID" header.
+- Install signal handler only for the global environment.
 
 ## [1.0.1] - 2016-08-22
 ### Changed
