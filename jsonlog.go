@@ -53,7 +53,8 @@ type ExecLog struct {
 	Utsname  string    `json:"utsname"`
 	Message  string    `json:"message"`
 
-	Type      string   `json:"type"` // "exec"
+	Type      string   `json:"type"`          // "exec"
+	Elapsed   float64  `json:"response_time"` // floating point number of seconds.
 	Command   string   `json:"command"`
 	Args      []string `json:"args"`
 	RequestID string   `json:"request_id"`
