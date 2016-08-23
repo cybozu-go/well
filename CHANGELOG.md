@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- HTTPClient, a wrapper for http.Client that adds request tracking ID and logs results.
+- LogCmd, a wrapper for exec.Cmd that records command execution results together with request tracking ID.
+
+### Changed
+- HTTPServer adds request tracking ID to the request context if the request has "X-Cybozu-Request-ID" header.
 
 ## [1.0.1] - 2016-08-22
 ### Changed

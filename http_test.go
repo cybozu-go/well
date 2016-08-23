@@ -13,9 +13,18 @@ import (
 	"github.com/cybozu-go/log"
 )
 
+const (
+	testUUID = "cad48be9-285c-4b70-8177-33e41550a3c8"
+)
+
 func newMux(env *Environment, sleepCh chan struct{}) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		v := r.Context().Value(RequestIDContextKey)
+		if v == nil {
+			http.Error(w, "No request ID in context", http.StatusInternalServerError)
+			return
+		}
 		w.Write([]byte("hello"))
 	})
 	mux.HandleFunc("/sleep", func(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +71,13 @@ func TestHTTPServer(t *testing.T) {
 	}
 
 	cl := newHTTPClient()
-	resp, err := cl.Get("http://localhost:16555/hello")
+
+	req, err := http.NewRequest("GET", "http://localhost:16555/hello", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set(requestIDHeader, testUUID)
+	resp, err := cl.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,6 +175,9 @@ func testAccessLog(r io.Reader, t *testing.T) {
 	if helloLog.ResponseLength != 5 {
 		t.Error(`helloLog.ResponseLength != 5`)
 	}
+	if helloLog.RequestID != testUUID {
+		t.Error(`helloLog.RequestID != testUUID`)
+	}
 }
 
 func TestHTTPServerTimeout(t *testing.T) {
@@ -206,5 +224,114 @@ func TestHTTPServerTimeout(t *testing.T) {
 	}
 	if !s.TimedOut() {
 		t.Error(`!s.TimedOut()`)
+	}
+}
+
+// Client tests
+
+type testClientHandler struct{}
+
+func (h testClientHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	uuid := r.Header.Get(requestIDHeader)
+	if uuid == testUUID {
+		return
+	}
+	http.Error(w, "invalid UUID", http.StatusInternalServerError)
+}
+
+func TestHTTPClient(t *testing.T) {
+	t.Parallel()
+
+	env := NewEnvironment(context.Background())
+
+	s := &HTTPServer{
+		Server: &http.Server{
+			Addr:    "localhost:16557",
+			Handler: testClientHandler{},
+		},
+		Env: env,
+	}
+	err := s.ListenAndServe()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	logger := log.NewLogger()
+	logger.SetFormatter(log.JSONFormat{})
+	buf := new(bytes.Buffer)
+	logger.SetOutput(buf)
+
+	cl := HTTPClient{
+		Client:   &http.Client{},
+		Severity: log.LvDebug,
+		Logger:   logger,
+	}
+	req, err := http.NewRequest("GET", "http://localhost:16557", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req = req.WithContext(WithRequestID(env.Context(), testUUID))
+	resp, err := cl.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.StatusCode != 200 {
+		t.Error("bad response:", resp.StatusCode)
+	}
+
+	if len(buf.Bytes()) != 0 {
+		t.Error("should not be logged")
+	}
+
+	req, err = http.NewRequest("GET", "http://localhost:16557", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// raise threshold
+	logger.SetThreshold(log.LvDebug)
+
+	req = req.WithContext(WithRequestID(env.Context(), testUUID))
+	resp, err = cl.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var reqlog RequestLog
+	err = json.Unmarshal(buf.Bytes(), &reqlog)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if time.Since(reqlog.LoggedAt) > time.Minute {
+		t.Error(`time.Since(reqlog.LoggedAt) > time.Minute`)
+	}
+	if reqlog.Severity != "debug" {
+		t.Error(`reqlog.Severity != "debug"`)
+	}
+	if reqlog.Type != "http" {
+		t.Error(`reqlog.Type != "http"`)
+	}
+	if reqlog.ResponseTime > 60.0 {
+		t.Error(`reqlog.ResponseTime > 60.0`)
+	}
+	if reqlog.StatusCode != 200 {
+		t.Error(`reqlog.StatusCode != 200`)
+	}
+	if reqlog.URLString != "http://localhost:16557" {
+		t.Error(`reqlog.URLString != "http://localhost:16557"`)
+	}
+	if time.Since(reqlog.StartAt) > time.Minute {
+		t.Error(`time.Since(reqlog.StartAt) > time.Minute`)
+	}
+	if reqlog.RequestID != testUUID {
+		t.Error(`reqlog.RequestID != testUUID`)
+	}
+
+	env.Cancel(nil)
+	err = env.Wait()
+	if err != nil {
+		t.Error(err)
 	}
 }

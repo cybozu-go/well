@@ -6,6 +6,8 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -17,9 +19,22 @@ import (
 const (
 	defaultHTTPReadTimeout = 30 * time.Second
 
-	// our request tracking header.
-	uuidHeaderName = "X-Cybozu-Request-ID"
+	// request tracking header.
+	defaultRequestIDHeader = "X-Cybozu-Request-ID"
+
+	requestIDHeaderEnv = "REQUEST_ID_HEADER"
 )
+
+var (
+	requestIDHeader = defaultRequestIDHeader
+)
+
+func init() {
+	hn := os.Getenv(requestIDHeaderEnv)
+	if len(hn) > 0 {
+		requestIDHeader = hn
+	}
+}
 
 // HTTPServer is a wrapper for http.Server.
 //
@@ -106,6 +121,12 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	lw := &logResponseWriter{w.(StdResponseWriter), http.StatusOK, 0}
 	ctx, cancel := context.WithCancel(s.Env.ctx)
 	defer cancel()
+
+	reqid := r.Header.Get(requestIDHeader)
+	if len(reqid) > 0 {
+		ctx = WithRequestID(ctx, reqid)
+	}
+
 	s.handler.ServeHTTP(lw, r.WithContext(ctx))
 
 	fields := map[string]interface{}{
@@ -127,7 +148,6 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(ua) > 0 {
 		fields[log.FnHTTPUserAgent] = ua
 	}
-	reqid := r.Header.Get(uuidHeaderName)
 	if len(reqid) > 0 {
 		fields[log.FnRequestID] = reqid
 	}
@@ -322,4 +342,88 @@ func (s *HTTPServer) ListenAndServeTLS(certFile, keyFile string) error {
 
 	tlsListener := tls.NewListener(ln, config)
 	return s.Serve(tlsListener)
+}
+
+// HTTPClient is a thin wrapper for *http.Client.
+//
+// This overrides Do method to add the request tracking header if
+// the passed request's context brings a request tracking ID.  Do
+// also records the request log to Logger.
+//
+// Do not use Get/Head/Post/PostForm.  They panics.
+type HTTPClient struct {
+	*http.Client
+
+	// Severity is used to log successful requests.
+	//
+	// Zero suppresses logging.  Valid values are one of
+	// log.LvDebug, log.LvInfo, and so on.
+	//
+	// Errors are always logged with log.LvError.
+	Severity int
+
+	// Logger for HTTP request.  If nil, the default logger is used.
+	Logger *log.Logger
+}
+
+// Do overrides http.Client.Do.
+//
+// req's context should have been set by http.Request.WithContext
+// for request tracking and context-based cancelation.
+func (c *HTTPClient) Do(req *http.Request) (*http.Response, error) {
+	ctx := req.Context()
+	v := ctx.Value(RequestIDContextKey)
+	if v != nil {
+		req.Header.Set(requestIDHeader, v.(string))
+	}
+	st := time.Now()
+	resp, err := c.Client.Do(req)
+
+	logger := c.Logger
+	if logger == nil {
+		logger = log.DefaultLogger()
+	}
+
+	if err == nil && (c.Severity == 0 || !logger.Enabled(c.Severity)) {
+		// successful logs are suppressed if c.Severity is 0 or
+		// logger threshold is under c.Severity.
+		return resp, err
+	}
+
+	fields := FieldsFromContext(ctx)
+	fields[log.FnType] = "http"
+	fields[log.FnResponseTime] = time.Since(st).Seconds()
+	fields[log.FnHTTPMethod] = req.Method
+	fields[log.FnURL] = req.URL.String()
+	fields[log.FnStartAt] = st
+
+	if err != nil {
+		fields["error"] = err.Error()
+		logger.Error("cmd: http", fields)
+		return resp, err
+	}
+
+	fields[log.FnHTTPStatusCode] = resp.StatusCode
+	logger.Log(c.Severity, "cmd: http", fields)
+	return resp, err
+}
+
+// Get panics.
+func (c *HTTPClient) Get(url string) (*http.Response, error) {
+	panic("Use Do")
+}
+
+// Head panics.
+func (c *HTTPClient) Head(url string) (*http.Response, error) {
+	panic("Use Do")
+}
+
+// Post panics.
+func (c *HTTPClient) Post(url, bodyType string, body io.Reader) (*http.Response, error) {
+	panic("Use Do")
+}
+
+// PostForm panics.
+func (c *HTTPClient) PostForm(url string, data url.Values) (*http.Response, error) {
+	panic("Use Do")
 }

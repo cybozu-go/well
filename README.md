@@ -20,6 +20,7 @@ Features
 * Signal handlers.
 * Graceful stop for network servers.
 * Enhanced [http.Server](https://golang.org/pkg/net/http/#Server).
+* Activity tracking.
 
 Requirements
 ------------
@@ -29,7 +30,7 @@ Go 1.7 or better.
 Specifications
 --------------
 
-Commands using this framework implement these features:
+Commands using this framework implement these external specifications:
 
 ### Command-line options
 
@@ -63,6 +64,14 @@ Commands using this framework implement these features:
     the program.
 
     On Windows, only `SIGINT` is handled.
+
+### Environment variables
+
+* `REQUEST_ID_HEADER`
+
+    The value of this variable is used as HTTP header name.
+    The HTTP header is used to track activities across services.
+    The default header name is "X-Cybozu-Request-ID".
 
 Usage
 -----
