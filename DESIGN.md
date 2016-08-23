@@ -16,7 +16,7 @@ Context
 -------
 
 The framework creates a single **base context** that will be canceled
-when `Stop()` is called.  `Stop()` is described later.
+when `Cancel()` is called.  `Cancel()` is described later.
 
 Goroutine management
 --------------------

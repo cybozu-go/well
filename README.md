@@ -76,7 +76,7 @@ Commands using this framework implement these external specifications:
 Usage
 -----
 
-Read [the design notes](DESIGN.md) and [godoc][].
+Read [Tutorial][wiki], [the design notes](DESIGN.md) and [godoc][].
 
 License
 -------
@@ -85,4 +85,5 @@ License
 
 [releases]: https://github.com/cybozu-go/cmd/releases
 [godoc]: https://godoc.org/github.com/cybozu-go/cmd
+[wiki]: https://github.com/cybozu-go/cmd/wiki/Tutorial
 [MIT]: https://opensource.org/licenses/MIT
