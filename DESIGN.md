@@ -125,6 +125,64 @@ To implement these, the framework provides a wrapping struct:
     This struct embeds http.Server and overrides `Serve`, `ListenAndServe`,
     and `ListenAndServeTLS` methods.
 
+Tracking activities
+-------------------
+
+Good programs record logs that help users to track problems.
+
+Among others, requests to other servers and execution of other programs
+are significant.  The framework provides helpers to log these events.
+
+Individual logs may help track problems but are not enough without
+information about relationship between logs.  For example, activities
+to complete a request for a REST API may involve events like:
+
+- Command executions
+- Requests for other services
+
+What we need is to include an identifier in log fields for each
+distinguished incoming request.  We call it *request ID*.
+
+Inside the framework, request ID is conveyed as a context value.
+The context key is `RequestIDContextKey`.
+
+Request ID is imported/exported via HTTP header "X-Cybozu-Request-ID".
+The header can be changed through "REQUEST_ID_HEADER" environment variable.
+`HTTPServer` and `HTTPClient` do this automatically.
+
+Related structs and functions:
+
+* `HTTPClient`
+
+    This is a thin wrapper for `http.Client`.  It overrides `Do` to
+    add "X-Cybozu-Request-ID" header and to record request logs.
+    Since only `Do` can take `http.Request` explicitly and request
+    context need to added by `http.Request.WithContext`, other methods
+    cannot be used.  They (`Get`, `Head`, `Post`, `PostForm`) would
+    cause panic if called.
+
+* `HTTPServer`
+
+    If an incoming request has "X-Cybozu-Request-ID" header, it
+    populates the header value into the request context.
+
+* `FieldsFromContext`
+
+    This is a function to construct fields of logs from a context.
+    Specifically, if the context have a request ID value, it is
+    added to the fields as "request_id".
+
+* `LogCmd`
+
+    This is a wrapper for `exec.Cmd`.  It overrides methods to
+    record execution logs.  If LogCmd.Context is not nil and
+    have a request ID value, the ID is logged as "request_id".
+
+* `CommandContext`
+
+    This function is similar to `exec.CommandContext` but creates
+    and returns `*LogCmd`.
+
 
 [log]: https://github.com/cybozu-go/log/
 [TOML]: https://github.com/toml-lang/toml
