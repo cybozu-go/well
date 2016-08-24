@@ -9,9 +9,10 @@ import (
 
 // Environment implements context-based goroutine management.
 type Environment struct {
-	ctx    context.Context
-	cancel context.CancelFunc
-	wg     sync.WaitGroup
+	ctx       context.Context
+	cancel    context.CancelFunc
+	wg        sync.WaitGroup
+	generator *IDGenerator
 
 	mu       sync.RWMutex
 	stopped  bool
@@ -27,9 +28,10 @@ type Environment struct {
 func NewEnvironment(ctx context.Context) *Environment {
 	ctx, cancel := context.WithCancel(ctx)
 	e := &Environment{
-		ctx:    ctx,
-		cancel: cancel,
-		stopCh: make(chan struct{}),
+		ctx:       ctx,
+		cancel:    cancel,
+		generator: NewIDGenerator(),
+		stopCh:    make(chan struct{}),
 	}
 	return e
 }
@@ -125,6 +127,7 @@ func (e *Environment) Go(f func(ctx context.Context) error) {
 	go func() {
 		ctx, cancel := context.WithCancel(e.ctx)
 		defer cancel()
+		ctx = WithRequestID(ctx, e.generator.Generate())
 		err := f(ctx)
 		if err != nil {
 			e.Cancel(err)

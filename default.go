@@ -8,7 +8,7 @@ var (
 
 func init() {
 	defaultEnv = NewEnvironment(context.Background())
-	defaultEnv.Go(handleSignal)
+	handleSignal(defaultEnv)
 }
 
 // Stop just declares no further Go will be called.

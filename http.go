@@ -68,6 +68,7 @@ type HTTPServer struct {
 
 	mu        sync.Mutex
 	idleConns map[net.Conn]struct{}
+	generator *IDGenerator
 
 	initOnce sync.Once
 }
@@ -123,9 +124,10 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 
 	reqid := r.Header.Get(requestIDHeader)
-	if len(reqid) > 0 {
-		ctx = WithRequestID(ctx, reqid)
+	if len(reqid) == 0 {
+		reqid = s.generator.Generate()
 	}
+	ctx = WithRequestID(ctx, reqid)
 
 	s.handler.ServeHTTP(lw, r.WithContext(ctx))
 
@@ -168,6 +170,7 @@ func (s *HTTPServer) init() {
 	}
 
 	s.idleConns = make(map[net.Conn]struct{}, 100000)
+	s.generator = NewIDGenerator()
 
 	if s.Server.Handler == nil {
 		panic("Handler must not be nil")

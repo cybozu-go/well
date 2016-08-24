@@ -5,11 +5,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
-- HTTPClient, a wrapper for http.Client that adds request tracking ID and logs results.
-- LogCmd, a wrapper for exec.Cmd that records command execution results together with request tracking ID.
+- `IDGenerator` generates UUID-like ID string for request tracking.
+- `Go` issues new request tracking ID and store it in the derived context.
+- `HTTPClient`, a wrapper for `http.Client` that exports request tracking ID and logs results.
+- `LogCmd`, a wrapper for `exec.Cmd` that records command execution results together with request tracking ID.
 
 ### Changed
-- HTTPServer adds request tracking ID to the request context if the request has "X-Cybozu-Request-ID" header.
+- `HTTPServer` adds or imports request tracking ID for every request.
+- `Server` adds request tracking ID for each new connection.
 - Install signal handler only for the global environment.
 
 ### Removed

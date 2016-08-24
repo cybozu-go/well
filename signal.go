@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"os"
 	"os/signal"
@@ -19,18 +18,16 @@ func IsSignaled(err error) bool {
 	return err == errSignaled
 }
 
-// handleSignal should be called by Go.
-func handleSignal(ctx context.Context) error {
+// handleSignal runs independent goroutine to cancel an environment.
+func handleSignal(env *Environment) {
 	ch := make(chan os.Signal, 2)
 	signal.Notify(ch, stopSignals...)
 
-	select {
-	case <-ctx.Done():
-		return nil
-	case s := <-ch:
+	go func() {
+		s := <-ch
 		log.Warn("cmd: got signal", map[string]interface{}{
 			"signal": s.String(),
 		})
-		return errSignaled
-	}
+		env.Cancel(errSignaled)
+	}()
 }
