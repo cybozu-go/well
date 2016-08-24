@@ -51,6 +51,11 @@ Context and `Environment`
 
 Basically, an environment can be considered as a barrier synchronizer.
 
+There is no way to obtain the context inside `Environment` other than `Go`.
+If `Environment` had `Context() context.Context` method, users would
+almost fail to stop goroutines gracefully as such goroutines will not
+be waited for by `Wait`.
+
 ### The global environment
 
 The framework creates and provides a global environment.
@@ -143,6 +148,9 @@ to complete a request for a REST API may involve events like:
 
 What we need is to include an identifier in log fields for each
 distinguished incoming request.  We call it *request ID*.
+
+Note that, unfortunately, Go does not provide ID for goroutines, hence
+we need to have an ID in contexts.
 
 Inside the framework, request ID is conveyed as a context value.
 The context key is `RequestIDContextKey`.

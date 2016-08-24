@@ -242,7 +242,9 @@ func (h testClientHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func TestHTTPClient(t *testing.T) {
 	t.Parallel()
 
-	env := NewEnvironment(context.Background())
+	ctx := context.Background()
+	env := NewEnvironment(ctx)
+	ctx = WithRequestID(ctx, testUUID)
 
 	s := &HTTPServer{
 		Server: &http.Server{
@@ -271,7 +273,7 @@ func TestHTTPClient(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req = req.WithContext(WithRequestID(env.Context(), testUUID))
+	req = req.WithContext(ctx)
 	resp, err := cl.Do(req)
 	if err != nil {
 		t.Fatal(err)
@@ -292,7 +294,7 @@ func TestHTTPClient(t *testing.T) {
 	// raise threshold
 	logger.SetThreshold(log.LvDebug)
 
-	req = req.WithContext(WithRequestID(env.Context(), testUUID))
+	req = req.WithContext(ctx)
 	resp, err = cl.Do(req)
 	if err != nil {
 		t.Fatal(err)

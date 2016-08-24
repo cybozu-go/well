@@ -8,16 +8,7 @@ var (
 
 func init() {
 	defaultEnv = NewEnvironment(context.Background())
-	handleSignal(defaultEnv)
-}
-
-// Context returns the base context of the global environment.
-//
-// In almost all cases, you should use Go rather than this to obtain
-// a context because goroutines started by Go can be synchronized by
-// Wait.  Be warned.
-func Context() context.Context {
-	return defaultEnv.Context()
+	defaultEnv.Go(handleSignal)
 }
 
 // Stop just declares no further Go will be called.

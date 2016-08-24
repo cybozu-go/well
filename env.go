@@ -34,15 +34,6 @@ func NewEnvironment(ctx context.Context) *Environment {
 	return e
 }
 
-// Context returns the base context of the environment.
-//
-// In almost all cases, you should use Go rather than this to obtain
-// a context because goroutines started by Go can be synchronized by
-// Wait.  Be warned.
-func (e *Environment) Context() context.Context {
-	return e.ctx
-}
-
 // Stop just declares no further Go will be called.
 //
 // Calling Stop is optional if and only if Cancel is guaranteed

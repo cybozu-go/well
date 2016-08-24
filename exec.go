@@ -29,10 +29,6 @@ func UTF8StringFromBytes(b []byte) string {
 type LogCmd struct {
 	*exec.Cmd
 
-	// Context is an optional context that may have RequestIDContextKey value.
-	// This can be left nil.
-	Context context.Context
-
 	// Severity is used to log successful requests.
 	//
 	// Zero suppresses logging.  Valid values are one of
@@ -40,6 +36,9 @@ type LogCmd struct {
 	//
 	// Errors are always logged with log.LvError.
 	Severity int
+
+	// Fields is passed to Logger as log fields.
+	Fields map[string]interface{}
 
 	// Logger for execution results.  If nil, the default logger is used.
 	Logger *log.Logger
@@ -57,13 +56,7 @@ func (c *LogCmd) log(st time.Time, err error, output []byte) {
 		return
 	}
 
-	var fields map[string]interface{}
-	if c.Context != nil {
-		// log request ID if context is given and contains one.
-		fields = FieldsFromContext(c.Context)
-	} else {
-		fields = make(map[string]interface{})
-	}
+	fields := c.Fields
 	fields[log.FnType] = "exec"
 	fields[log.FnResponseTime] = time.Since(st).Seconds()
 	fields["command"] = c.Cmd.Path
@@ -138,7 +131,7 @@ func (c *LogCmd) Wait() error {
 func CommandContext(ctx context.Context, name string, args ...string) *LogCmd {
 	return &LogCmd{
 		Cmd:      exec.CommandContext(ctx, name, args...),
-		Context:  ctx,
 		Severity: log.LvInfo,
+		Fields:   FieldsFromContext(ctx),
 	}
 }

@@ -97,10 +97,10 @@ func ExampleLogConfig() {
 	}
 }
 
-// Sub environment to barrier wait goroutines.
+// Barrier wait for gorutines.
 func ExampleNewEnvironment() {
-	// env is a sub environment of the global environment.
-	env := cmd.NewEnvironment(cmd.Context())
+	// An independent environment.
+	env := cmd.NewEnvironment(context.Background())
 
 	env.Go(func(ctx context.Context) error {
 		// do something
@@ -117,8 +117,8 @@ func ExampleNewEnvironment() {
 		log.ErrorExit(err)
 	}
 
-	// another sub environment for another barrier.
-	env = cmd.NewEnvironment(cmd.Context())
+	// another environment for another barrier.
+	env = cmd.NewEnvironment(context.Background())
 
 	// env.Go, env.Stop, and env.Wait again.
 }

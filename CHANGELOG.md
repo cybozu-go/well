@@ -12,6 +12,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - HTTPServer adds request tracking ID to the request context if the request has "X-Cybozu-Request-ID" header.
 - Install signal handler only for the global environment.
 
+### Removed
+- `Context` method of `Environment` is removed.  It was a design flaw.
+
 ## [1.0.1] - 2016-08-22
 ### Changed
 - Update docs.
