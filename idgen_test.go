@@ -19,3 +19,11 @@ func TestIDGenerator(t *testing.T) {
 		t.Error(`g2.Generate() != "05020002-c4d5-e6f7-8090-a0b0c0d0e0ff"`)
 	}
 }
+
+func BenchmarkIDGenerator(b *testing.B) {
+	g := NewIDGenerator()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		g.Generate()
+	}
+}
