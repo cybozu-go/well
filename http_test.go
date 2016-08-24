@@ -139,8 +139,6 @@ func testAccessLog(r io.Reader, t *testing.T) {
 
 	helloLog := accessLogs[0]
 	notfoundLog := accessLogs[1]
-	t.Logf("%#v", *helloLog)
-	t.Logf("%#v", *notfoundLog)
 
 	if time.Since(helloLog.LoggedAt) > time.Minute {
 		t.Error(`time.Since(helloLog.LoggedAt) > time.Minute`)

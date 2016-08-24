@@ -90,3 +90,34 @@ func TestEnvironmentGo(t *testing.T) {
 		t.Error(`err != testError`)
 	}
 }
+
+func TestEnvironmentID(t *testing.T) {
+	t.Parallel()
+
+	env := NewEnvironment(context.Background())
+
+	idch := make(chan interface{}, 1)
+	env.Go(func(ctx context.Context) error {
+		idch <- ctx.Value(RequestIDContextKey)
+		return nil
+	})
+
+	env.Stop()
+	err := env.Wait()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id := <-idch
+	if id == nil {
+		t.Fatal(`id == nil`)
+	}
+
+	sid, ok := id.(string)
+	if !ok {
+		t.Error(`id is not a string`)
+	}
+	if len(sid) != 36 {
+		t.Error(`len(sid) != 36`)
+	}
+}

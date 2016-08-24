@@ -64,6 +64,7 @@ func (s *Server) Serve(l net.Listener) {
 	}()
 
 	env.Go(func(ctx context.Context) error {
+		generator := NewIDGenerator()
 		for {
 			conn, err := l.Accept()
 			if err != nil {
@@ -78,6 +79,7 @@ func (s *Server) Serve(l net.Listener) {
 			go func() {
 				ctx, cancel := context.WithCancel(ctx)
 				defer cancel()
+				ctx = WithRequestID(ctx, generator.Generate())
 				s.Handler(ctx, conn)
 				s.wg.Done()
 			}()
