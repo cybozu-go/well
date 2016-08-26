@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `Graceful` for network servers to implement graceful restart.
+- `SystemdListeners` returns `[]net.Listener` for [systemd socket activation][activation].
 
 ## [1.1.0] - 2016-08-24
 ### Added
@@ -26,6 +29,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Use [cybozu-go/netutil](https://github.com/cybozu-go/netutil).
 - Conform to cybozu-go/log v1.1.0 spec.
 
+[activation]: http://0pointer.de/blog/projects/socket-activation.html
 [Unreleased]: https://github.com/cybozu-go/cmd/compare/v1.1.0...HEAD
 [1.1.0]: https://github.com/cybozu-go/cmd/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/cybozu-go/cmd/compare/v1.0.0...v1.0.1

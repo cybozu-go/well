@@ -192,6 +192,37 @@ Related structs and functions:
     This function is similar to `exec.CommandContext` but creates
     and returns `*LogCmd`.
 
+Graceful restart
+----------------
+
+Graceful restart of network servers need to keep listening sockets
+while restarting server programs.  To keep listening sockets, a
+master process should exist.
+
+The master process executes a child process with file descriptors
+of listening sockets.  The child process converts them into
+`net.Listner` objects and uses them to accept connections.
+
+To restart, the master process handles SIGHUP.  When got a SIGHUP,
+the master process send SIGTERM to the child.  The child process
+will immediately close the listeners as long as they are built on
+this framework.  Therefore, the master process can create a new
+child process soon after SIGTERM sent.
+
+Another thing we need to care is how to serialize writes to log files.
+Our solution is that the master process gathers logs from children
+via stderr and writes them to logs.  For this to work, we need to:
+
+1. communicate between the master and children via pipe on stderr.
+2. make `LogConfig.Apply` ignore filename in child processes.
+
+Related structs:
+
+* `Graceful`
+
+    This struct has only one public method `Run`.
+    Users must call `Run` in their `main`.
+
 
 [log]: https://github.com/cybozu-go/log/
 [TOML]: https://github.com/toml-lang/toml
