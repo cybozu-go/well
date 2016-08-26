@@ -14,7 +14,15 @@ var (
 	logFilename = flag.String("logfile", "", "Log filename")
 	logLevel    = flag.String("loglevel", "", "Log level [critical,error,warning,info,debug]")
 	logFormat   = flag.String("logformat", "", "Log format [plain,logfmt,json]")
+
+	ignoreLogFilename bool
 )
+
+func init() {
+	// This is for child processes of graceful restarting server.
+	// See graceful.go
+	ignoreLogFilename = !isMaster()
+}
 
 // LogConfig configures cybozu-go/log's default logger.
 //
@@ -45,7 +53,7 @@ func (c LogConfig) Apply() error {
 	if len(*logFilename) > 0 {
 		filename = *logFilename
 	}
-	if len(filename) > 0 {
+	if len(filename) > 0 && !ignoreLogFilename {
 		abspath, err := filepath.Abs(filename)
 		if err != nil {
 			return err
