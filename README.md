@@ -15,11 +15,12 @@ Most features cannot be configured.
 Features
 --------
 
-* Logging options.
 * [Context](https://golang.org/pkg/context/)-based goroutine management.
 * Signal handlers.
 * Graceful stop/restart for any kind of network servers.
+* Logging options.
 * Enhanced [http.Server](https://golang.org/pkg/net/http/#Server).
+* Ultra fast UUID-like ID generator.
 * Activity tracking.
 * Support for [systemd socket activation](http://0pointer.de/blog/projects/socket-activation.html).
 

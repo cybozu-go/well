@@ -8,6 +8,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - `Graceful` for network servers to implement graceful restart.
 - `SystemdListeners` returns `[]net.Listener` for [systemd socket activation][activation].
 
+### Changed
+- Optimize `IDGenerator` performance.
+- `Server.Handler` closes connection.
+
 ## [1.1.0] - 2016-08-24
 ### Added
 - `IDGenerator` generates UUID-like ID string for request tracking.
