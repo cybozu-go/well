@@ -15,12 +15,14 @@ Most features cannot be configured.
 Features
 --------
 
-* Logging options.
 * [Context](https://golang.org/pkg/context/)-based goroutine management.
 * Signal handlers.
-* Graceful stop for network servers.
+* Graceful stop/restart for any kind of network servers.
+* Logging options.
 * Enhanced [http.Server](https://golang.org/pkg/net/http/#Server).
+* Ultra fast UUID-like ID generator.
 * Activity tracking.
+* Support for [systemd socket activation](http://0pointer.de/blog/projects/socket-activation.html).
 
 Requirements
 ------------
@@ -65,6 +67,18 @@ Commands using this framework implement these external specifications:
 
     On Windows, only `SIGINT` is handled.
 
+* `SIGHUP`
+
+    This signal is used to restart network servers gracefully.
+    Internally, the main (master) process restarts its child process.
+    The PID of the master process thus will not change.
+
+    There is one limitation: the location of log file cannot be changed
+    by graceful restart.  To change log file location, the server need
+    to be (gracefully) stopped and started.
+
+    On Windows, this is not implemented.
+
 ### Environment variables
 
 * `REQUEST_ID_HEADER`
@@ -72,6 +86,10 @@ Commands using this framework implement these external specifications:
     The value of this variable is used as HTTP header name.
     The HTTP header is used to track activities across services.
     The default header name is "X-Cybozu-Request-ID".
+
+* `CYBOZU_LISTEN_FDS`
+
+    This is used internally for graceful restart.
 
 Usage
 -----

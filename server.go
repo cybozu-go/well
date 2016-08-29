@@ -22,6 +22,8 @@ type Server struct {
 	//
 	// ctx is a derived context from the base context that will be
 	// canceled when Handler returns.
+	//
+	// conn will be closed when Handler returns.
 	Handler func(ctx context.Context, conn net.Conn)
 
 	// ShutdownTimeout is the maximum duration the server waits for
@@ -78,7 +80,10 @@ func (s *Server) Serve(l net.Listener) {
 			s.wg.Add(1)
 			go func() {
 				ctx, cancel := context.WithCancel(ctx)
-				defer cancel()
+				defer func() {
+					cancel()
+					conn.Close()
+				}()
 				ctx = WithRequestID(ctx, generator.Generate())
 				s.Handler(ctx, conn)
 				s.wg.Done()
