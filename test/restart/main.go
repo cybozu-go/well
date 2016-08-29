@@ -120,6 +120,12 @@ func ping(network, addr string) error {
 	if err != nil {
 		return err
 	}
+	if string(data) != "hello 1" {
+		log.Error("wrong response", map[string]interface{}{
+			"data": data,
+		})
+		return errors.New("invalid response")
+	}
 	log.Info("got data", map[string]interface{}{
 		"data": string(data),
 	})
