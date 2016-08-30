@@ -92,7 +92,9 @@ func (e *Environment) Cancel(err error) bool {
 // program got SIGINT or SIGTERM.
 func (e *Environment) Wait() error {
 	<-e.stopCh
-	log.Info("cmd: waiting for all goroutines to complete", nil)
+	if log.Enabled(log.LvDebug) {
+		log.Debug("cmd: waiting for all goroutines to complete", nil)
+	}
 	e.wg.Wait()
 	e.cancel() // in case no one calls Cancel
 
