@@ -96,6 +96,16 @@ Usage
 
 Read [Tutorial][wiki], [the design notes](DESIGN.md) and [godoc][].
 
+Real world examples
+-------------------
+
+* [`github.com/cybozu-go/aptutil`](https://github.com/cybozu-go/aptutil)
+* [`github.com/cybozu-go/goma`](https://github.com/cybozu-go/goma)
+* [`github.com/cybozu-go/transocks`](https://github.com/cybozu-go/transocks)
+* [`github.com/cybozu-go/usocksd`](https://github.com/cybozu-go/usocksd)
+
+Pull requests are welcome to add your project to this list!
+
 License
 -------
 
