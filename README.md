@@ -7,10 +7,7 @@
 Go Command Framework
 ====================
 
-This is a command framework mainly for our Go products.
-
-Be warned that this is a _framework_ rather than a library.
-Most features cannot be configured.
+This is a framework to create well-behaving commands.
 
 Features
 --------
