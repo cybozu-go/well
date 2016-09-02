@@ -31,6 +31,11 @@ func TestServer(t *testing.T) {
 
 	l := listen(15555, t)
 	handler := func(ctx context.Context, conn net.Conn) {
+		if ctx.Value(RequestIDContextKey) == nil {
+			// handler must receive a new request ID.
+			return
+		}
+
 		conn.Write([]byte{'h', 'e', 'l', 'l', 'o'})
 		<-ctx.Done()
 

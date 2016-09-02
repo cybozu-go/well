@@ -62,3 +62,8 @@ func Wait() error {
 func Go(f func(ctx context.Context) error) {
 	defaultEnv.Go(f)
 }
+
+// GoWithID calls Go with a context having a new request tracking ID.
+func GoWithID(f func(ctx context.Context) error) {
+	defaultEnv.GoWithID(f)
+}
