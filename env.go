@@ -129,11 +129,17 @@ func (e *Environment) Go(f func(ctx context.Context) error) {
 	go func() {
 		ctx, cancel := context.WithCancel(e.ctx)
 		defer cancel()
-		ctx = WithRequestID(ctx, e.generator.Generate())
 		err := f(ctx)
 		if err != nil {
 			e.Cancel(err)
 		}
 		e.wg.Done()
 	}()
+}
+
+// GoWithID calls Go with a context having a new request tracking ID.
+func (e *Environment) GoWithID(f func(ctx context.Context) error) {
+	e.Go(func(ctx context.Context) error {
+		return f(WithRequestID(ctx, e.generator.Generate()))
+	})
 }

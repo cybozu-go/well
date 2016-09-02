@@ -97,7 +97,7 @@ func TestEnvironmentID(t *testing.T) {
 	env := NewEnvironment(context.Background())
 
 	idch := make(chan interface{}, 1)
-	env.Go(func(ctx context.Context) error {
+	env.GoWithID(func(ctx context.Context) error {
 		idch <- ctx.Value(RequestIDContextKey)
 		return nil
 	})
