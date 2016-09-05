@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"runtime"
 	"testing"
 	"time"
 
@@ -179,6 +180,9 @@ func testAccessLog(r io.Reader, t *testing.T) {
 }
 
 func TestHTTPServerTimeout(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("windows doesn't support FileListener")
+	}
 	t.Parallel()
 
 	env := NewEnvironment(context.Background())
