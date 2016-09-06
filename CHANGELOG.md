@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Fix Windows support by [@mattn](https://github.com/mattn).
+- Fix a subtle data race in `Graceful`.
 
 ## [1.3.0] - 2016-09-02
 ### Added
