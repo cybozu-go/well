@@ -98,7 +98,7 @@ func serve(listeners []net.Listener) {
 
 func testClient(ctx context.Context) error {
 	for i := 0; i < 5; i++ {
-		err := ping("tcp", tcpAddr)
+		err := ping("tcp4", tcpAddr)
 		if err != nil {
 			return err
 		}
