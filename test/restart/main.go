@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"runtime"
 	"strconv"
 	"sync/atomic"
-	"syscall"
 	"time"
 
 	"github.com/cybozu-go/cmd"
@@ -43,11 +43,14 @@ func main() {
 		if err != nil {
 			log.ErrorExit(err)
 		}
+		if runtime.GOOS == "windows" {
+			cmd.Go(testClient)
+			return []net.Listener{ln1}, nil
+		}
 		ln2, err := net.Listen("unix", unixAddr)
 		if err != nil {
 			log.ErrorExit(err)
 		}
-		// start client after creating listening socket.
 		cmd.Go(testClient)
 		return []net.Listener{ln1, ln2}, nil
 	}
@@ -70,12 +73,15 @@ func main() {
 func serve(listeners []net.Listener) {
 	var counter int64
 	handler := func(ctx context.Context, conn net.Conn) {
+		if runtime.GOOS == "windows" {
+			conn.Write([]byte("hello 1"))
+			return
+		}
 		n := atomic.AddInt64(&counter, 1)
 		if n > 1 {
 			time.Sleep(time.Duration(n) * time.Second)
 		}
 		conn.Write([]byte("hello " + strconv.FormatInt(n, 10)))
-		conn.Close()
 	}
 
 	s := &cmd.Server{
@@ -99,9 +105,11 @@ func testClient(ctx context.Context) error {
 		restart()
 	}
 
-	err := ping("unix", unixAddr)
-	if err != nil {
-		return err
+	if runtime.GOOS != "windows" {
+		err := ping("unix", unixAddr)
+		if err != nil {
+			return err
+		}
 	}
 
 	cmd.Cancel(nil)
@@ -134,9 +142,4 @@ func ping(network, addr string) error {
 		return errors.New("too long")
 	}
 	return nil
-}
-
-func restart() {
-	syscall.Kill(os.Getpid(), syscall.SIGHUP)
-	time.Sleep(10 * time.Millisecond)
 }
