@@ -159,6 +159,7 @@ RESTART:
 		return err
 	}
 	copyDone := make(chan struct{})
+	// clog will be closed on child.Wait().
 	go copyLog(logger, clog, copyDone)
 
 	done := make(chan error, 1)
@@ -167,12 +168,12 @@ RESTART:
 		return err
 	}
 	go func() {
+		<-copyDone
 		done <- child.Wait()
 	}()
 
 	select {
 	case err := <-done:
-		<-copyDone
 		return err
 	case <-sighup:
 		child.Process.Signal(syscall.SIGTERM)
@@ -183,12 +184,10 @@ RESTART:
 		child.Process.Signal(syscall.SIGTERM)
 		if g.ExitTimeout == 0 {
 			<-done
-			<-copyDone
 			return nil
 		}
 		select {
 		case <-done:
-			<-copyDone
 			return nil
 		case <-time.After(g.ExitTimeout):
 			logger.Warn("cmd: timeout child exit", nil)
@@ -204,9 +203,8 @@ func (g *Graceful) makeChild(files []*os.File) *exec.Cmd {
 	return child
 }
 
-func copyLog(logger *log.Logger, r io.ReadCloser, done chan<- struct{}) {
+func copyLog(logger *log.Logger, r io.Reader, done chan<- struct{}) {
 	defer func() {
-		r.Close()
 		close(done)
 	}()
 
