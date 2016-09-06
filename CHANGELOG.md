@@ -6,6 +6,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - `BackgroundWithID` creates a new context inheriting the request ID.
+- `Graceful` for Windows to make porting easy, though it does not restart.
+
+### Changed
+- Fix Windows support by [@mattn](https://github.com/mattn).
 
 ## [1.3.0] - 2016-09-02
 ### Added
