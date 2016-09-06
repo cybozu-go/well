@@ -20,3 +20,14 @@ func (k contextKey) String() string {
 func WithRequestID(ctx context.Context, reqid string) context.Context {
 	return context.WithValue(ctx, RequestIDContextKey, reqid)
 }
+
+// BackgroundWithID returns a new background context with an existing
+// request ID in ctx, if any.
+func BackgroundWithID(ctx context.Context) context.Context {
+	id := ctx.Value(RequestIDContextKey)
+	ctx = context.Background()
+	if id == nil {
+		return ctx
+	}
+	return WithRequestID(ctx, id.(string))
+}
