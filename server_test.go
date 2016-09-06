@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"net"
+	"runtime"
 	"strconv"
 	"testing"
 	"time"
@@ -27,6 +28,9 @@ func connect(port int, t *testing.T) net.Conn {
 }
 
 func TestServer(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("windows doesn't support FileListener")
+	}
 	t.Parallel()
 
 	l := listen(15555, t)
@@ -72,6 +76,9 @@ func TestServer(t *testing.T) {
 }
 
 func TestServerTimeout(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("windows doesn't support FileListener")
+	}
 	t.Parallel()
 
 	l := listen(15556, t)

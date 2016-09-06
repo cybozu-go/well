@@ -2,10 +2,14 @@ package cmd
 
 import (
 	"net"
+	"runtime"
 	"testing"
 )
 
 func TestListenerFiles(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("windows doesn't support FileListener")
+	}
 	t.Parallel()
 
 	ln, err := net.Listen("tcp", "localhost:18555")
