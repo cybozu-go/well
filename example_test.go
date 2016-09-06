@@ -1,5 +1,3 @@
-// +build !windows
-
 package cmd_test
 
 import (
@@ -7,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"net/http"
-	"syscall"
 
 	"github.com/BurntSushi/toml"
 	"github.com/cybozu-go/cmd"
@@ -44,14 +41,9 @@ func Example_http() {
 	flag.Parse() // must precedes LogConfig.Apply
 	cmd.LogConfig{}.Apply()
 
-	// log accesses to another file in JSON Lines format.
-	w, err := log.NewFileReopener("/path/to/access.log", syscall.SIGUSR1)
-	if err != nil {
-		log.ErrorExit(err)
-	}
+	// log accesses in JSON Lines format.
 	accessLog := log.NewLogger()
 	accessLog.SetFormatter(log.JSONFormat{})
-	accessLog.SetOutput(w)
 
 	// HTTP server.
 	serv := &cmd.HTTPServer{
@@ -62,7 +54,7 @@ func Example_http() {
 	}
 
 	// ListenAndServe is overridden to start a goroutine by cmd.Go.
-	err = serv.ListenAndServe()
+	err := serv.ListenAndServe()
 	if err != nil {
 		log.ErrorExit(err)
 	}
