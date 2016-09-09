@@ -13,7 +13,7 @@ func SystemdListeners() ([]net.Listener, error) {
 	return nil, nil
 }
 
-// Run, on Windows, simply calls g.Listen then g.Serve.
+// Run simply calls g.Listen then g.Serve on Windows.
 func (g *Graceful) Run() {
 	env := g.Env
 	if env == nil {

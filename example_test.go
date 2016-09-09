@@ -2,7 +2,6 @@ package cmd_test
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"net/http"
 
@@ -11,21 +10,34 @@ import (
 	"github.com/cybozu-go/log"
 )
 
+func doSomething() error {
+	return nil
+}
+
 // The most basic usage of the framework.
 func Example_basic() {
 	flag.Parse()
 	cmd.LogConfig{}.Apply()
 
 	cmd.Go(func(ctx context.Context) error {
-		// do something
+		err := doSomething()
 
-		return errors.New("...")
+		if err != nil {
+			// non-nil error will be passed to Cancel
+			// by the framework.
+			return err
+		}
+
+		// on success, nil should be returned.
+		return nil
 	})
 
 	// some more Go
 	//cmd.Go(func(ctx context.Context) error {})
 
 	// Stop declares no Go calls will be made from this point.
+	// Calling Stop is optional if Cancel is guaranteed to be called
+	// at some point.
 	cmd.Stop()
 
 	// Wait waits for all goroutines started by Go to complete,
