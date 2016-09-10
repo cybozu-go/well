@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [1.4.0] - 2016-09-10
 ### Added
 - `BackgroundWithID` creates a new context inheriting the request ID.
 - `Graceful` for Windows to make porting easy, though it does not restart.
@@ -51,7 +53,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Conform to cybozu-go/log v1.1.0 spec.
 
 [activation]: http://0pointer.de/blog/projects/socket-activation.html
-[Unreleased]: https://github.com/cybozu-go/cmd/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/cybozu-go/cmd/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/cybozu-go/cmd/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/cybozu-go/cmd/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/cybozu-go/cmd/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/cybozu-go/cmd/compare/v1.0.1...v1.1.0
