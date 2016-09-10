@@ -42,7 +42,7 @@ Commands using this framework implement these external specifications:
     Change logging threshold to LEVEL.  Default is `info`.  
     LEVEL is one of `critical`, `error`, `warning`, `info`, or `debug`.
 
-* `-logfmt FORMAT`
+* `-logformat FORMAT`
 
     Change log formatter.  Default is `plain`.  
     FORMAT is one of `plain`, `logfmt`, or `json`.
