@@ -23,8 +23,9 @@ type Environment struct {
 
 // NewEnvironment creates a new Environment.
 //
-// This function installs a signal handler that calls Cancel when
-// SIGINT or SIGTERM is sent.
+// This does *not* install signal handlers for SIGINT/SIGTERM
+// for new environments.  Only the global environment will be
+// canceled on these signals.
 func NewEnvironment(ctx context.Context) *Environment {
 	ctx, cancel := context.WithCancel(ctx)
 	e := &Environment{

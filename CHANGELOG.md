@@ -5,6 +5,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Fix `NewEnvironment` documentation.
+
 ## [1.4.0] - 2016-09-10
 ### Added
 - `BackgroundWithID` creates a new context inheriting the request ID.
