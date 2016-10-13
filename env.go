@@ -33,6 +33,7 @@ func NewEnvironment(ctx context.Context) *Environment {
 		generator: NewIDGenerator(),
 		stopCh:    make(chan struct{}),
 	}
+	handleSignal(e)
 	return e
 }
 
