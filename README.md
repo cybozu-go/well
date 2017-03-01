@@ -76,6 +76,10 @@ Commands using this framework implement these external specifications:
 
     On Windows, this is not implemented.
 
+* `SIGPIPE`
+
+    SIGPIPE is completely ignored.  See [#13](https://github.com/cybozu-go/cmd/issues/13) for details.
+
 ### Environment variables
 
 * `REQUEST_ID_HEADER`

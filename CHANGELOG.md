@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Fix `NewEnvironment` documentation.
+- Ignore SIGPIPE for systemd (#13).
 
 ## [1.4.0] - 2016-09-10
 ### Added
