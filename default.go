@@ -9,6 +9,7 @@ var (
 func init() {
 	defaultEnv = NewEnvironment(context.Background())
 	handleSignal(defaultEnv)
+	ignoreSigPipe()
 }
 
 // Stop just declares no further Go will be called.
