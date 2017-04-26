@@ -78,7 +78,9 @@ Commands using this framework implement these external specifications:
 
 * `SIGPIPE`
 
-    SIGPIPE is completely ignored.  See [#13](https://github.com/cybozu-go/cmd/issues/13) for details.
+    The framework changes [the way Go handles SIGPIPE slightly](https://golang.org/pkg/os/signal/#hdr-SIGPIPE).
+    If a program using this framework receives SIGPIPE when writing to stdout or stderr, the program exits with status code 2.
+    See [#15](https://github.com/cybozu-go/cmd/issues/15) for details.
 
 ### Environment variables
 

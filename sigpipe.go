@@ -12,7 +12,7 @@ const (
 	sigPipeExit = 2
 )
 
-// handleSigPipe catches SIGPIPE and exit abnormally with status code 2.
+// handleSigPipe catches SIGPIPE and exits abnormally with status code 2.
 //
 // Background:
 //
@@ -27,16 +27,20 @@ const (
 // https://golang.org/pkg/os/signal/#hdr-SIGPIPE
 //
 // journald is a service tightly integrated in systemd.  Go programs
-// running as a systemd service will normally connect its stdout and
+// running as a systemd service will normally connect their stdout and
 // stderr pipes to journald.  Unfortunately though, journald often
 // dies and restarts due to bugs, and once it restarts, programs
-// whose stdout and stderr was connected to journald will receive
+// whose stdout and stderr were connected to journald will receive
 // SIGPIPE at their next writes to stdout or stderr.
 //
 // Combined these specifications and problems all together, Go programs
 // running as systemd services often die with SIGPIPE, but systemd will
-// not restarts them as they "successfully exited" except when the service
+// not restart them as they "successfully exited" except when the service
 // is configured with SuccessExitStatus= without SIGPIPE or Restart=always.
+//
+// Ignoring SIGPIPE would not help; the stdout or stderr pipes will
+// be choked and eventually the Go program will stop forever there
+// if a service ignores SIGPIPE and writes to them contiuously.
 //
 // Handling SIGPIPE manually and exiting with abnormal status code 2
 // can work around the problem.
