@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- `IsSystemdService` to detect if running as a systemd service.
+
+### Changed
+- Ignore SIGPIPE for systemd, reverts #15 (#17).
 
 ## [1.4.2] - 2017-04-26
 ### Changed
