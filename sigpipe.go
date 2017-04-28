@@ -8,11 +8,8 @@ import (
 	"syscall"
 )
 
-const (
-	sigPipeExit = 2
-)
-
-// handleSigPipe catches SIGPIPE and exits abnormally with status code 2.
+// handleSigPipe discards SIGPIPE if the program is running
+// as a systemd service.
 //
 // Background:
 //
@@ -38,17 +35,25 @@ const (
 // not restart them as they "successfully exited" except when the service
 // is configured with SuccessExitStatus= without SIGPIPE or Restart=always.
 //
-// Ignoring SIGPIPE would not help; the stdout or stderr pipes will
-// be choked and eventually the Go program will stop forever there
-// if a service ignores SIGPIPE and writes to them contiuously.
+// If we catch SIGPIPE and exits abnormally, systemd would restart the
+// program.  However, if we call signal.Notify(c, syscall.SIGPIPE),
+// SIGPIPE would be raised not only for stdout and stderr but also for
+// other file descriptors.  This means that programs that make network
+// connections will get a lot of SIGPIPEs and die.  Of course, this is
+// not acceptable.
 //
-// Handling SIGPIPE manually and exiting with abnormal status code 2
-// can work around the problem.
+// Therefore, we just catch SIGPIPEs and drop them if the program
+// runs as a systemd service.  This way, we can detect journald restarts
+// by checking the errors from os.Stdout.Write or os.Stderr.Write.
+// This check is mainly done in our logger, cybozu-go/log.
 func handleSigPipe() {
-	c := make(chan os.Signal, 1)
+	if !IsSystemdService() {
+		return
+	}
+
+	// signal.Ignore does NOT ignore signals; instead, it just stop
+	// relaying signals to the channel.  Instead, we use an unbuffered
+	// channel to discard SIGPIPE.
+	c := make(chan os.Signal)
 	signal.Notify(c, syscall.SIGPIPE)
-	go func() {
-		<-c
-		os.Exit(sigPipeExit)
-	}()
 }
