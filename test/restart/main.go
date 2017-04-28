@@ -35,6 +35,12 @@ func main() {
 	flag.Parse()
 	cmd.LogConfig{}.Apply()
 
+	if cmd.IsSystemdService() {
+		log.Info("run as a systemd service", nil)
+	} else {
+		log.Info("not a systemd service", nil)
+	}
+
 	unixAddr = getTemporaryFilename()
 	defer os.Remove(unixAddr)
 
