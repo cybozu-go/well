@@ -10,5 +10,5 @@ import (
 
 func restart() {
 	syscall.Kill(os.Getpid(), syscall.SIGHUP)
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 }
