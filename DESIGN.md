@@ -51,10 +51,10 @@ Context and `Environment`
 
 Basically, an environment can be considered as a barrier synchronizer.
 
-There is no way to obtain the context inside `Environment` other than `Go`.
+There is no way to obtain the context inside `Environment` other than `Go()`.
 If `Environment` had `Context() context.Context` method, users would
 almost fail to stop goroutines gracefully as such goroutines will not
-be waited for by `Wait`.
+be waited for by `Wait()`.
 
 ### The global environment
 
@@ -163,12 +163,12 @@ Related structs and functions:
 
 * `HTTPClient`
 
-    This is a thin wrapper for `http.Client`.  It overrides `Do` to
+    This is a thin wrapper for `http.Client`.  It overrides `Do()` to
     add "X-Cybozu-Request-ID" header and to record request logs.
-    Since only `Do` can take `http.Request` explicitly and request
-    context need to added by `http.Request.WithContext`, other methods
-    cannot be used.  They (`Get`, `Head`, `Post`, `PostForm`) would
-    cause panic if called.
+    Since only `Do()` can take `http.Request` explicitly and request
+    context need to added by `http.Request.WithContext()`, other methods
+    cannot be used.  They (`Get()`, `Head()`, `Post()`, and `PostForm()`)
+    would cause panic if called.
 
 * `HTTPServer`
 
@@ -214,7 +214,7 @@ Our solution is that the master process gathers logs from children
 via stderr and writes them to logs.  For this to work, we need to:
 
 1. communicate between the master and children via pipe on stderr.
-2. make `LogConfig.Apply` ignore filename in child processes.
+2. make `LogConfig.Apply()` ignore filename in child processes.
 
 Related structs:
 
