@@ -1,8 +1,7 @@
 [![GitHub release](https://img.shields.io/github/release/cybozu-go/cmd.svg?maxAge=60)][releases]
 [![GoDoc](https://godoc.org/github.com/cybozu-go/cmd?status.svg)][godoc]
-[![Build Status](https://travis-ci.org/cybozu-go/cmd.svg?branch=master)](https://travis-ci.org/cybozu-go/cmd)
+[![CircleCI](https://circleci.com/gh/cybozu-go/cmd.svg?style=svg)](https://circleci.com/gh/cybozu-go/cmd)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/cmd)](https://goreportcard.com/report/github.com/cybozu-go/cmd)
-[![License](https://img.shields.io/github/license/cybozu-go/cmd.svg?maxAge=2592000)](LICENSE)
 
 Go Command Framework
 ====================
