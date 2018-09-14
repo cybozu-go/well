@@ -12,4 +12,5 @@ jobs:
       - run: GOOS=windows go build .
       - run: go build .
       - run: go test -race -v .
-      - run: $GOPATH/bin/restart
+      - run: go build ./test/restart
+      - run: ./restart
