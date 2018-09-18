@@ -12,5 +12,6 @@ jobs:
       - run: GOOS=windows go build .
       - run: go build .
       - run: go test -race -v .
+      - run: go vet .
       - run: go build ./test/restart
       - run: ./restart
