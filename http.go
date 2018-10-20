@@ -227,11 +227,6 @@ func (s *HTTPServer) Serve(l net.Listener) error {
 	l = netutil.KeepAliveListener(l)
 
 	go func() {
-		<-s.Env.ctx.Done()
-		l.Close()
-	}()
-
-	go func() {
 		s.Server.Serve(l)
 	}()
 
