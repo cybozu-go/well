@@ -13,5 +13,10 @@ jobs:
       - run: go build .
       - run: go test -race -v .
       - run: go vet .
-      - run: go build ./test/restart
-      - run: ./restart
+      - run: |
+          go build ./test/restart
+          ./restart
+      - run: |
+          cd ./test/spf13
+          go build .
+          ./spf13 --config=.spf13.yml --loglevel=critical
