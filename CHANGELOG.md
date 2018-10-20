@@ -5,6 +5,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Support for github.com/spf13/pflag and github.com/spf13/viper
+
 ## [1.7.0] - 2018-10-20
 ### Changed
 - Use http.Server.Shutdown for Go 1.8+ (#23).

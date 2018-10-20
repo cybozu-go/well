@@ -1,0 +1,5 @@
+other_key: 1
+
+log:
+  level: error
+  format: json

@@ -17,7 +17,10 @@ func doSomething() error {
 // The most basic usage of the framework.
 func Example_basic() {
 	flag.Parse()
-	well.LogConfig{}.Apply()
+	err := well.LogConfig{}.Apply()
+	if err != nil {
+		log.ErrorExit(err)
+	}
 
 	well.Go(func(ctx context.Context) error {
 		err := doSomething()
@@ -42,7 +45,7 @@ func Example_basic() {
 
 	// Wait waits for all goroutines started by Go to complete,
 	// or one of such goroutine returns non-nil error.
-	err := well.Wait()
+	err = well.Wait()
 	if err != nil {
 		log.ErrorExit(err)
 	}
@@ -51,7 +54,10 @@ func Example_basic() {
 // HTTP server that stops gracefully.
 func Example_http() {
 	flag.Parse() // must precedes LogConfig.Apply
-	well.LogConfig{}.Apply()
+	err := well.LogConfig{}.Apply()
+	if err != nil {
+		log.ErrorExit(err)
+	}
 
 	// log accesses in JSON Lines format.
 	accessLog := log.NewLogger()
@@ -66,7 +72,7 @@ func Example_http() {
 	}
 
 	// ListenAndServe is overridden to start a goroutine by well.Go.
-	err := serv.ListenAndServe()
+	err = serv.ListenAndServe()
 	if err != nil {
 		log.ErrorExit(err)
 	}
