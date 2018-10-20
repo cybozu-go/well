@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/well"
 )
 
 var (
@@ -33,9 +33,9 @@ func getTemporaryFilename() string {
 
 func main() {
 	flag.Parse()
-	cmd.LogConfig{}.Apply()
+	well.LogConfig{}.Apply()
 
-	if cmd.IsSystemdService() {
+	if well.IsSystemdService() {
 		log.Info("run as a systemd service", nil)
 	} else {
 		log.Info("not a systemd service", nil)
@@ -50,32 +50,32 @@ func main() {
 			log.ErrorExit(err)
 		}
 		if runtime.GOOS == "windows" {
-			cmd.Go(testClient)
+			well.Go(testClient)
 			return []net.Listener{ln1}, nil
 		}
 		ln2, err := net.Listen("unix", unixAddr)
 		if err != nil {
 			log.ErrorExit(err)
 		}
-		cmd.Go(testClient)
+		well.Go(testClient)
 		return []net.Listener{ln1, ln2}, nil
 	}
 
-	g := &cmd.Graceful{
+	g := &well.Graceful{
 		Listen: listen,
 		Serve:  serve,
 	}
 	g.Run()
 
 	// rest are executed only in the master process.
-	err := cmd.Wait()
-	if err != nil && !cmd.IsSignaled(err) {
+	err := well.Wait()
+	if err != nil && !well.IsSignaled(err) {
 		log.ErrorExit(err)
 	}
 }
 
 // serve implements a network server that can be stopped gracefully
-// using cmd.Server.
+// using well.Server.
 func serve(listeners []net.Listener) {
 	var counter int64
 	handler := func(ctx context.Context, conn net.Conn) {
@@ -90,14 +90,14 @@ func serve(listeners []net.Listener) {
 		conn.Write([]byte("hello " + strconv.FormatInt(n, 10)))
 	}
 
-	s := &cmd.Server{
+	s := &well.Server{
 		Handler: handler,
 	}
 	for _, ln := range listeners {
 		s.Serve(ln)
 	}
-	err := cmd.Wait()
-	if err != nil && !cmd.IsSignaled(err) {
+	err := well.Wait()
+	if err != nil && !well.IsSignaled(err) {
 		log.ErrorExit(err)
 	}
 }
@@ -118,7 +118,7 @@ func testClient(ctx context.Context) error {
 		}
 	}
 
-	cmd.Cancel(nil)
+	well.Cancel(nil)
 	return nil
 }
 

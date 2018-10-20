@@ -1,4 +1,4 @@
-package cmd_test
+package well_test
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/BurntSushi/toml"
-	"github.com/cybozu-go/cmd"
 	"github.com/cybozu-go/log"
+	"github.com/cybozu-go/well"
 )
 
 func doSomething() error {
@@ -17,9 +17,9 @@ func doSomething() error {
 // The most basic usage of the framework.
 func Example_basic() {
 	flag.Parse()
-	cmd.LogConfig{}.Apply()
+	well.LogConfig{}.Apply()
 
-	cmd.Go(func(ctx context.Context) error {
+	well.Go(func(ctx context.Context) error {
 		err := doSomething()
 
 		if err != nil {
@@ -33,16 +33,16 @@ func Example_basic() {
 	})
 
 	// some more Go
-	//cmd.Go(func(ctx context.Context) error {})
+	//well.Go(func(ctx context.Context) error {})
 
 	// Stop declares no Go calls will be made from this point.
 	// Calling Stop is optional if Cancel is guaranteed to be called
 	// at some point.
-	cmd.Stop()
+	well.Stop()
 
 	// Wait waits for all goroutines started by Go to complete,
 	// or one of such goroutine returns non-nil error.
-	err := cmd.Wait()
+	err := well.Wait()
 	if err != nil {
 		log.ErrorExit(err)
 	}
@@ -51,32 +51,32 @@ func Example_basic() {
 // HTTP server that stops gracefully.
 func Example_http() {
 	flag.Parse() // must precedes LogConfig.Apply
-	cmd.LogConfig{}.Apply()
+	well.LogConfig{}.Apply()
 
 	// log accesses in JSON Lines format.
 	accessLog := log.NewLogger()
 	accessLog.SetFormatter(log.JSONFormat{})
 
 	// HTTP server.
-	serv := &cmd.HTTPServer{
+	serv := &well.HTTPServer{
 		Server: &http.Server{
 			Handler: http.FileServer(http.Dir("/path/to/directory")),
 		},
 		AccessLog: accessLog,
 	}
 
-	// ListenAndServe is overridden to start a goroutine by cmd.Go.
+	// ListenAndServe is overridden to start a goroutine by well.Go.
 	err := serv.ListenAndServe()
 	if err != nil {
 		log.ErrorExit(err)
 	}
 
 	// Wait waits for SIGINT or SIGTERM.
-	// In this case, cmd.Stop can be omitted.
-	err = cmd.Wait()
+	// In this case, well.Stop can be omitted.
+	err = well.Wait()
 
 	// Use IsSignaled to determine err is the result of a signal.
-	if err != nil && !cmd.IsSignaled(err) {
+	if err != nil && !well.IsSignaled(err) {
 		log.ErrorExit(err)
 	}
 }
@@ -84,7 +84,7 @@ func Example_http() {
 // Load logging configurations from TOML file.
 func ExampleLogConfig() {
 	// compile-time defaults
-	config := &cmd.LogConfig{
+	config := &well.LogConfig{
 		Level:  "error",
 		Format: "json",
 	}
@@ -106,7 +106,7 @@ func ExampleLogConfig() {
 // Barrier wait for gorutines.
 func ExampleNewEnvironment() {
 	// An independent environment.
-	env := cmd.NewEnvironment(context.Background())
+	env := well.NewEnvironment(context.Background())
 
 	env.Go(func(ctx context.Context) error {
 		// do something
@@ -124,7 +124,7 @@ func ExampleNewEnvironment() {
 	}
 
 	// another environment for another barrier.
-	env = cmd.NewEnvironment(context.Background())
+	env = well.NewEnvironment(context.Background())
 
 	// env.Go, env.Stop, and env.Wait again.
 }

@@ -1,4 +1,4 @@
-package cmd
+package well
 
 import (
 	"context"
@@ -161,7 +161,7 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case 400 <= lw.status:
 		lv = log.LvWarn
 	}
-	s.AccessLog.Log(lv, "cmd: access", fields)
+	s.AccessLog.Log(lv, "well: access", fields)
 }
 
 func (s *HTTPServer) init() {
@@ -248,7 +248,7 @@ func (s *HTTPServer) wait(ctx context.Context) error {
 	select {
 	case <-ch:
 	case <-time.After(s.ShutdownTimeout):
-		log.Warn("cmd: timeout waiting for shutdown", nil)
+		log.Warn("well: timeout waiting for shutdown", nil)
 		atomic.StoreInt32(&s.timedout, 1)
 	}
 	return nil
@@ -402,12 +402,12 @@ func (c *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 
 	if err != nil {
 		fields["error"] = err.Error()
-		logger.Error("cmd: http", fields)
+		logger.Error("well: http", fields)
 		return resp, err
 	}
 
 	fields[log.FnHTTPStatusCode] = resp.StatusCode
-	logger.Log(c.Severity, "cmd: http", fields)
+	logger.Log(c.Severity, "well: http", fields)
 	return resp, err
 }
 

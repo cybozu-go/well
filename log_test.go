@@ -1,6 +1,6 @@
 // +build !windows
 
-package cmd
+package well
 
 import (
 	"bytes"
@@ -23,7 +23,7 @@ func TestLogConfig(t *testing.T) {
 		Log LogConfig `toml:"log" json:"log"`
 	}
 
-	_, err := toml.DecodeFile("t/log.toml", &c1)
+	_, err := toml.DecodeFile("testdata/log.toml", &c1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestLogConfig(t *testing.T) {
 		t.Error(`c1.Log.Format != "json"`)
 	}
 
-	f, err := os.Open("t/log.json")
+	f, err := os.Open("testdata/log.json")
 	if err != nil {
 		t.Fatal(err)
 	}
