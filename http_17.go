@@ -1,4 +1,4 @@
-// +build go1.8
+// +build !go1.8
 
 package well
 
@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/cybozu-go/log"
@@ -63,9 +64,13 @@ type HTTPServer struct {
 	// The global environment is used if Env is nil.
 	Env *Environment
 
-	handler     http.Handler
-	shutdownErr error
-	generator   *IDGenerator
+	handler  http.Handler
+	wg       sync.WaitGroup
+	timedout int32
+
+	mu        sync.Mutex
+	idleConns map[net.Conn]struct{}
+	generator *IDGenerator
 
 	initOnce sync.Once
 }
@@ -162,6 +167,11 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *HTTPServer) init() {
+	if s.handler != nil {
+		return
+	}
+
+	s.idleConns = make(map[net.Conn]struct{}, 100000)
 	s.generator = NewIDGenerator()
 
 	if s.Server.Handler == nil {
@@ -172,6 +182,23 @@ func (s *HTTPServer) init() {
 	if s.Server.ReadTimeout == 0 {
 		s.Server.ReadTimeout = defaultHTTPReadTimeout
 	}
+	s.Server.ConnState = func(c net.Conn, state http.ConnState) {
+		s.mu.Lock()
+		if state == http.StateIdle {
+			s.idleConns[c] = struct{}{}
+		} else {
+			delete(s.idleConns, c)
+		}
+		s.mu.Unlock()
+
+		if state == http.StateNew {
+			s.wg.Add(1)
+			return
+		}
+		if state == http.StateHijacked || state == http.StateClosed {
+			s.wg.Done()
+		}
+	}
 
 	if s.AccessLog == nil {
 		s.AccessLog = log.DefaultLogger()
@@ -180,7 +207,6 @@ func (s *HTTPServer) init() {
 	if s.Env == nil {
 		s.Env = defaultEnv
 	}
-
 	s.Env.Go(s.wait)
 }
 
@@ -189,27 +215,51 @@ func (s *HTTPServer) wait(ctx context.Context) error {
 
 	s.Server.SetKeepAlivesEnabled(false)
 
-	ctx = context.Background()
-	if s.ShutdownTimeout != 0 {
-		ctx2, cancel := context.WithTimeout(ctx, s.ShutdownTimeout)
-		defer cancel()
-		ctx = ctx2
+	ch := make(chan struct{})
+
+	// Interrupt conn.Read for idle connections.
+	//
+	// This must be run inside for-loop to catch connections
+	// going idle at critical timing to acquire s.mu
+	go func() {
+	AGAIN:
+		s.mu.Lock()
+		for conn := range s.idleConns {
+			conn.SetReadDeadline(time.Now())
+		}
+		s.mu.Unlock()
+		select {
+		case <-ch:
+			return
+		default:
+		}
+		time.Sleep(10 * time.Millisecond)
+		goto AGAIN
+	}()
+
+	go func() {
+		s.wg.Wait()
+		close(ch)
+	}()
+
+	if s.ShutdownTimeout == 0 {
+		<-ch
+		return nil
 	}
 
-	err := s.Server.Shutdown(ctx)
-	if err != nil {
-		log.Warn("well: unclean shutdown", map[string]interface{}{
-			log.FnError: err,
-		})
-		s.shutdownErr = err
+	select {
+	case <-ch:
+	case <-time.After(s.ShutdownTimeout):
+		log.Warn("well: timeout waiting for shutdown", nil)
+		atomic.StoreInt32(&s.timedout, 1)
 	}
-	return err
+	return nil
 }
 
 // TimedOut returns true if the server shut down before all connections
 // got closed.
 func (s *HTTPServer) TimedOut() bool {
-	return s.shutdownErr == context.DeadlineExceeded
+	return atomic.LoadInt32(&s.timedout) != 0
 }
 
 // Serve overrides http.Server's Serve method.
