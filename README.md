@@ -19,6 +19,7 @@ Features
 * Ultra fast UUID-like ID generator.
 * Activity tracking.
 * Support for [systemd socket activation](http://0pointer.de/blog/projects/socket-activation.html).
+* Support for [github.com/spf13/cobra][cobra].
 
 Requirements
 ------------
@@ -98,9 +99,12 @@ Usage
 
 Read [Tutorial][wiki], [the design notes](DESIGN.md) and [godoc][].
 
+A [wiki page for cobra users](https://github.com/cybozu-go/well/wiki/Use-with-spf13-cobra) is also available.
+
 Real world examples
 -------------------
 
+* [`github.com/cybozu-go/coil`](https://github.com/cybozu-go/coil) uses well with [cobra][].
 * [`github.com/cybozu-go/aptutil`](https://github.com/cybozu-go/aptutil)
 * [`github.com/cybozu-go/goma`](https://github.com/cybozu-go/goma)
 * [`github.com/cybozu-go/transocks`](https://github.com/cybozu-go/transocks)
@@ -116,4 +120,5 @@ License
 [releases]: https://github.com/cybozu-go/well/releases
 [godoc]: https://godoc.org/github.com/cybozu-go/well
 [wiki]: https://github.com/cybozu-go/well/wiki/Tutorial
+[cobra]: https://github.com/spf13/cobra
 [MIT]: https://opensource.org/licenses/MIT
