@@ -70,44 +70,45 @@ type HTTPServer struct {
 	initOnce sync.Once
 }
 
-// StdResponseWriter is the interface implemented by
-// the ResponseWriter from http.Server.
-//
-// HTTPServer's ResponseWriter implements this as well.
-type StdResponseWriter interface {
-	http.ResponseWriter
-	io.ReaderFrom
-	http.Flusher
-	http.CloseNotifier
-	http.Hijacker
+// io.StringWriter was unexported in Go 1.11 and earlier
+// TODO: remove this when we support Go 1.12+ exclusively
+type stringWriter interface {
 	WriteString(data string) (int, error)
 }
 
 type logResponseWriter struct {
-	StdResponseWriter
+	http.ResponseWriter
 	status int
 	size   int64
 }
 
 func (w *logResponseWriter) WriteHeader(status int) {
 	w.status = status
-	w.StdResponseWriter.WriteHeader(status)
+	w.ResponseWriter.WriteHeader(status)
 }
 
 func (w *logResponseWriter) Write(data []byte) (int, error) {
-	n, err := w.StdResponseWriter.Write(data)
+	n, err := w.ResponseWriter.Write(data)
 	w.size += int64(n)
 	return n, err
 }
 
 func (w *logResponseWriter) ReadFrom(r io.Reader) (int64, error) {
-	n, err := w.StdResponseWriter.ReadFrom(r)
+	rf, ok := w.ResponseWriter.(io.ReaderFrom)
+	if !ok {
+		return int64(0), nil
+	}
+	n, err := rf.ReadFrom(r)
 	w.size += n
 	return n, err
 }
 
 func (w *logResponseWriter) WriteString(data string) (int, error) {
-	n, err := w.StdResponseWriter.WriteString(data)
+	sw, ok := w.ResponseWriter.(stringWriter)
+	if !ok {
+		return 0, nil
+	}
+	n, err := sw.WriteString(data)
 	w.size += int64(n)
 	return n, err
 }
@@ -116,7 +117,7 @@ func (w *logResponseWriter) WriteString(data string) (int, error) {
 func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 
-	lw := &logResponseWriter{w.(StdResponseWriter), http.StatusOK, 0}
+	lw := &logResponseWriter{w, http.StatusOK, 0}
 	ctx, cancel := context.WithCancel(s.Env.ctx)
 	defer cancel()
 
