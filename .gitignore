@@ -33,3 +33,7 @@ _testmain.go
 
 # ignore go.sum
 /go.sum
+
+# ignore test certificates
+test/*.crt
+test/*.key

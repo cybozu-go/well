@@ -3,15 +3,26 @@ package well
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
+	"encoding/pem"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"math/big"
 	"net/http"
+	"os"
+	"path/filepath"
 	"runtime"
 	"testing"
 	"time"
 
 	"github.com/cybozu-go/log"
+	"golang.org/x/net/http2"
 )
 
 const (
@@ -42,10 +53,122 @@ func newHTTPClient() *http.Client {
 	tr := &http.Transport{
 		DisableCompression:  true,
 		MaxIdleConnsPerHost: 10,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
 	}
 	return &http.Client{
 		Transport: tr,
 	}
+}
+
+func newHTTP2Client() *http.Client {
+	tr := &http2.Transport{
+		DisableCompression: true,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+	return &http.Client{
+		Transport: tr,
+	}
+}
+
+func newDummyCert(crtFile, keyFile string) (err error) {
+	max := new(big.Int).Lsh(big.NewInt(1), 128)
+	serial, err := rand.Int(rand.Reader, max)
+	if err != nil {
+		return
+	}
+	certTemplate := &x509.Certificate{
+		SerialNumber:          serial,
+		Subject:               pkix.Name{Organization: []string{"A Datum, Corp."}},
+		SignatureAlgorithm:    x509.SHA256WithRSA,
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(time.Hour),
+		BasicConstraintsValid: true,
+		IsCA:                  true,
+		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
+		DNSNames:              []string{"localhost"},
+	}
+	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return
+	}
+	cert, err := x509.CreateCertificate(rand.Reader, certTemplate, certTemplate, &rsaKey.PublicKey, rsaKey)
+	if err != nil {
+		return
+	}
+	crt, err := os.Create(crtFile)
+	if err != nil {
+		return
+	}
+
+	if err = pem.Encode(crt, &pem.Block{Type: "CERTIFICATE", Bytes: cert}); err != nil {
+		return
+	}
+	if err = crt.Close(); err != nil {
+		return
+	}
+	key, err := os.OpenFile(keyFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return
+	}
+	if err = pem.Encode(key, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(rsaKey)}); err != nil {
+		return
+	}
+	err = key.Close()
+	return
+}
+
+func testServer(baseURI string, env *Environment, cl *http.Client, out *bytes.Buffer, t *testing.T) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/hello", baseURI), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set(requestIDHeader, testUUID)
+	resp, err := cl.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, _ := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("%d %s", resp.StatusCode, string(data))
+	}
+	if !bytes.Equal(data, []byte("hello")) {
+		t.Error(`!bytes.Equal(data, []byte("hello"))`)
+	}
+
+	resp, err = cl.Get(fmt.Sprintf("%s/notfound", baseURI))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf(`resp.StatusCode != http.StatusNotFound`)
+	}
+
+	resp, err = cl.Get(fmt.Sprintf("%s/shutdown", baseURI))
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, _ = ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("%d %s", resp.StatusCode, string(data))
+	}
+
+	waitStart := time.Now()
+	err = env.Wait()
+	if err != nil {
+		t.Error(err)
+	}
+	if time.Since(waitStart) > time.Second {
+		t.Error("too long to shutdown")
+	}
+
+	testAccessLog(bytes.NewReader(out.Bytes()), t)
 }
 
 func TestHTTPServer(t *testing.T) {
@@ -70,55 +193,76 @@ func TestHTTPServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	cl := newHTTPClient()
+	testServer(fmt.Sprintf("http://%s", s.Server.Addr), env, cl, out, t)
+}
 
-	req, err := http.NewRequest("GET", "http://localhost:16555/hello", nil)
+func TestTLSServer(t *testing.T) {
+	t.Parallel()
+
+	env := NewEnvironment(context.Background())
+	logger := log.NewLogger()
+	out := new(bytes.Buffer)
+	logger.SetOutput(out)
+	logger.SetFormatter(log.JSONFormat{})
+
+	certFile := filepath.Join("test", "test.crt")
+	keyFile := filepath.Join("test", "test.key")
+	err := newDummyCert(certFile, keyFile)
 	if err != nil {
 		t.Fatal(err)
 	}
-	req.Header.Set(requestIDHeader, testUUID)
-	resp, err := cl.Do(req)
+
+	s := &HTTPServer{
+		Server: &http.Server{
+			Addr:        "localhost:16666",
+			Handler:     newMux(env, nil),
+			ReadTimeout: 3 * time.Second,
+		},
+		AccessLog: logger,
+		Env:       env,
+	}
+
+	err = s.ListenAndServeTLS(certFile, keyFile)
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, _ := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("%d %s", resp.StatusCode, string(data))
-	}
-	if !bytes.Equal(data, []byte("hello")) {
-		t.Error(`!bytes.Equal(data, []byte("hello"))`)
-	}
+	cl := newHTTPClient()
+	testServer(fmt.Sprintf("https://%s", s.Server.Addr), env, cl, out, t)
+}
 
-	resp, err = cl.Get("http://localhost:16555/notfound")
+func TestHTTP2Server(t *testing.T) {
+	t.Parallel()
+
+	env := NewEnvironment(context.Background())
+	logger := log.NewLogger()
+	out := new(bytes.Buffer)
+	logger.SetOutput(out)
+	logger.SetFormatter(log.JSONFormat{})
+
+	certFile := filepath.Join("test", "test2.crt")
+	keyFile := filepath.Join("test", "test2.key")
+	err := newDummyCert(certFile, keyFile)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resp.StatusCode != http.StatusNotFound {
-		t.Errorf(`resp.StatusCode != http.StatusNotFound`)
+
+	s := &HTTPServer{
+		Server: &http.Server{
+			Addr:        "localhost:16777",
+			Handler:     newMux(env, nil),
+			ReadTimeout: 3 * time.Second,
+		},
+		AccessLog: logger,
+		Env:       env,
 	}
 
-	resp, err = cl.Get("http://localhost:16555/shutdown")
+	err = s.ListenAndServeTLS(certFile, keyFile)
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, _ = ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("%d %s", resp.StatusCode, string(data))
-	}
-
-	waitStart := time.Now()
-	err = env.Wait()
-	if err != nil {
-		t.Error(err)
-	}
-	if time.Since(waitStart) > time.Second {
-		t.Error("too long to shutdown")
-	}
-
-	testAccessLog(bytes.NewReader(out.Bytes()), t)
+	cl := newHTTP2Client()
+	testServer(fmt.Sprintf("https://%s", s.Server.Addr), env, cl, out, t)
 }
 
 func testAccessLog(r io.Reader, t *testing.T) {

@@ -8,4 +8,5 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.2.1
 	github.com/stretchr/testify v1.2.2 // indirect
+	golang.org/x/net v0.0.0-20180911220305-26e67e76b6c3
 )
