@@ -49,26 +49,28 @@ func newMux(env *Environment, sleepCh chan struct{}) http.Handler {
 	return mux
 }
 
-func newHTTPClient() *http.Client {
+func newTransport() *http.Transport {
 	tr := &http.Transport{
+		DisableKeepAlives: true,
 		DisableCompression:  true,
 		MaxIdleConnsPerHost: 10,
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
 		},
 	}
+	return tr
+}
+
+func newHTTPClient() *http.Client {
+	tr := newTransport()
 	return &http.Client{
 		Transport: tr,
 	}
 }
 
 func newHTTP2Client() *http.Client {
-	tr := &http2.Transport{
-		DisableCompression: true,
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-		},
-	}
+	tr := newTransport()
+	http2.ConfigureTransport(tr)
 	return &http.Client{
 		Transport: tr,
 	}
@@ -164,8 +166,8 @@ func testServer(baseURI string, env *Environment, cl *http.Client, out *bytes.Bu
 	if err != nil {
 		t.Error(err)
 	}
-	if time.Since(waitStart) > time.Second {
-		t.Error("too long to shutdown")
+	if shutdownTime := time.Since(waitStart); shutdownTime > time.Second {
+		t.Errorf("too long to shutdown: %v", shutdownTime)
 	}
 
 	testAccessLog(bytes.NewReader(out.Bytes()), t)
