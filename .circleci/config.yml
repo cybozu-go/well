@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       - image: quay.io/cybozu/golang:1.12-bionic
-    working_directory: /work
+    working_directory: /ci
     steps:
       - checkout
       - run: go get -v -t -d ./...
