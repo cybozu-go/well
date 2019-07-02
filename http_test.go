@@ -51,7 +51,7 @@ func newMux(env *Environment, sleepCh chan struct{}) http.Handler {
 
 func newTransport() *http.Transport {
 	tr := &http.Transport{
-		DisableKeepAlives: true,
+		DisableKeepAlives:   true,
 		DisableCompression:  true,
 		MaxIdleConnsPerHost: 10,
 		TLSClientConfig: &tls.Config{
