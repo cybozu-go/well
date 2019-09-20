@@ -140,7 +140,7 @@ func (s *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.FnResponseSize:   lw.size,
 	}
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
+	if err == nil {
 		fields[log.FnRemoteAddress] = ip
 	}
 	ua := r.Header.Get("User-Agent")
