@@ -3,7 +3,9 @@ package well
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +14,7 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
+	"golang.org/x/net/http2"
 )
 
 const (
@@ -24,6 +27,21 @@ func newMux(env *Environment, sleepCh chan struct{}) http.Handler {
 		v := r.Context().Value(RequestIDContextKey)
 		if v == nil {
 			http.Error(w, "No request ID in context", http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Printf("req=%+v\n", r)
+		if r.ProtoMajor == 2 {
+			if _, ok := w.(StdResponseWriter2); !ok {
+				http.Error(w, "not implement StdResponseWriter2", http.StatusInternalServerError)
+				return
+			}
+			w.Write([]byte("hello2"))
+			return
+		}
+
+		if _, ok := w.(StdResponseWriter); !ok {
+			http.Error(w, "not implement StdResponseWriter", http.StatusInternalServerError)
 			return
 		}
 		w.Write([]byte("hello"))
@@ -42,6 +60,11 @@ func newHTTPClient() *http.Client {
 	tr := &http.Transport{
 		DisableCompression:  true,
 		MaxIdleConnsPerHost: 10,
+		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+	}
+	err := http2.ConfigureTransport(tr)
+	if err != nil {
+		panic(err)
 	}
 	return &http.Client{
 		Transport: tr,
@@ -109,6 +132,8 @@ func TestHTTPServer(t *testing.T) {
 		t.Errorf("%d %s", resp.StatusCode, string(data))
 	}
 
+	cl.CloseIdleConnections()
+
 	waitStart := time.Now()
 	err = env.Wait()
 	if err != nil {
@@ -118,10 +143,83 @@ func TestHTTPServer(t *testing.T) {
 		t.Error("too long to shutdown")
 	}
 
-	testAccessLog(bytes.NewReader(out.Bytes()), t)
+	testAccessLog(bytes.NewReader(out.Bytes()), t, 5)
 }
 
-func testAccessLog(r io.Reader, t *testing.T) {
+func TestHTTPServer2(t *testing.T) {
+	t.Parallel()
+
+	env := NewEnvironment(context.Background())
+	logger := log.NewLogger()
+	out := new(bytes.Buffer)
+	logger.SetOutput(out)
+	logger.SetFormatter(log.JSONFormat{})
+
+	s := &HTTPServer{
+		Server: &http.Server{
+			Addr:        "localhost:16556",
+			Handler:     newMux(env, nil),
+			ReadTimeout: 3 * time.Second,
+		},
+		AccessLog: logger,
+		Env:       env,
+	}
+	err := s.ListenAndServeTLS("testdata/cert.pem", "testdata/key.pem")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cl := newHTTPClient()
+
+	req, err := http.NewRequest("GET", "https://localhost:16556/hello", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set(requestIDHeader, testUUID)
+	resp, err := cl.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, _ := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("%d %s", resp.StatusCode, string(data))
+	}
+	if !bytes.Equal(data, []byte("hello2")) {
+		t.Error(`!bytes.Equal(data, []byte("hello2"))`)
+	}
+
+	resp, err = cl.Get("https://localhost:16556/notfound")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf(`resp.StatusCode != http.StatusNotFound`)
+	}
+
+	resp, err = cl.Get("https://localhost:16556/shutdown")
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, _ = ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("%d %s", resp.StatusCode, string(data))
+	}
+
+	waitStart := time.Now()
+	err = env.Wait()
+	if err != nil {
+		t.Error(err)
+	}
+	if time.Since(waitStart) > 3*time.Second {
+		t.Error("too long to shutdown")
+	}
+
+	testAccessLog(bytes.NewReader(out.Bytes()), t, 6)
+}
+
+func testAccessLog(r io.Reader, t *testing.T, helloLength int64) {
 	decoder := json.NewDecoder(r)
 
 	accessLogs := make([]*AccessLog, 0, 3)
@@ -171,8 +269,8 @@ func testAccessLog(r io.Reader, t *testing.T) {
 	if notfoundLog.RequestURI != "/notfound" {
 		t.Error(`notfoundLog.RequestURI != "/notfound"`)
 	}
-	if helloLog.ResponseLength != 5 {
-		t.Error(`helloLog.ResponseLength != 5`)
+	if helloLog.ResponseLength != helloLength {
+		t.Error(`helloLog.ResponseLength != helloLength`)
 	}
 	if helloLog.RequestID != testUUID {
 		t.Error(`helloLog.RequestID != testUUID`)
@@ -189,7 +287,7 @@ func TestHTTPServerTimeout(t *testing.T) {
 	sleepCh := make(chan struct{})
 	s := &HTTPServer{
 		Server: &http.Server{
-			Addr:    "localhost:16556",
+			Addr:    "localhost:16557",
 			Handler: newMux(env, sleepCh),
 		},
 		ShutdownTimeout: 50 * time.Millisecond,
@@ -202,7 +300,7 @@ func TestHTTPServerTimeout(t *testing.T) {
 
 	cl := newHTTPClient()
 	go func() {
-		resp, err := cl.Get("http://localhost:16556/sleep")
+		resp, err := cl.Get("http://localhost:16557/sleep")
 		if err != nil {
 			return
 		}
@@ -210,7 +308,7 @@ func TestHTTPServerTimeout(t *testing.T) {
 	}()
 
 	<-sleepCh
-	resp, err := cl.Get("http://localhost:16556/shutdown")
+	resp, err := cl.Get("http://localhost:16557/shutdown")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -250,7 +348,7 @@ func TestHTTPClient(t *testing.T) {
 
 	s := &HTTPServer{
 		Server: &http.Server{
-			Addr:    "localhost:16557",
+			Addr:    "localhost:16558",
 			Handler: testClientHandler{},
 		},
 		Env: env,
@@ -270,7 +368,7 @@ func TestHTTPClient(t *testing.T) {
 		Severity: log.LvDebug,
 		Logger:   logger,
 	}
-	req, err := http.NewRequest("GET", "http://localhost:16557", nil)
+	req, err := http.NewRequest("GET", "http://localhost:16558", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -288,7 +386,7 @@ func TestHTTPClient(t *testing.T) {
 		t.Error("should not be logged")
 	}
 
-	req, err = http.NewRequest("GET", "http://localhost:16557", nil)
+	req, err = http.NewRequest("GET", "http://localhost:16558", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -323,8 +421,8 @@ func TestHTTPClient(t *testing.T) {
 	if reqlog.StatusCode != 200 {
 		t.Error(`reqlog.StatusCode != 200`)
 	}
-	if reqlog.URLString != "http://localhost:16557" {
-		t.Error(`reqlog.URLString != "http://localhost:16557"`)
+	if reqlog.URLString != "http://localhost:16558" {
+		t.Error(`reqlog.URLString != "http://localhost:16558"`)
 	}
 	if time.Since(reqlog.StartAt) > time.Minute {
 		t.Error(`time.Since(reqlog.StartAt) > time.Minute`)
