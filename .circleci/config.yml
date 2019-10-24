@@ -23,3 +23,8 @@ jobs:
           cp root.go_ root.go
           go build .
           ./spf13 --config=.spf13.yml --loglevel=critical
+workflows:
+  version: 2
+  main:
+    jobs:
+      - build
