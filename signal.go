@@ -34,23 +34,34 @@ func handleSignal(env *Environment) {
 		log.Warn("well: got signal", map[string]interface{}{
 			"signal": s.String(),
 		})
-		delayStr := os.Getenv(cancellationDelaySecondsEnv)
-		delay, err := strconv.Atoi(delayStr)
-		if err != nil {
-			log.Warn("well: set default cancellation delay seconds", map[string]interface{}{
-				"env":   delayStr,
-				"delay": defaultCancellationDelaySeconds,
-			})
-			delay = defaultCancellationDelaySeconds
-		}
-		if delay < 0 {
-			log.Warn("well: round up negative cancellation delay seconds to 0s", map[string]interface{}{
-				"env":   delayStr,
-				"delay": 0,
-			})
-			delay = 0
-		}
+		delay := getDelaySecondsFromEnv()
 		time.Sleep(time.Duration(delay) * time.Second)
 		env.Cancel(errSignaled)
 	}()
+}
+
+func getDelaySecondsFromEnv() int {
+	delayStr := os.Getenv(cancellationDelaySecondsEnv)
+	if len(delayStr) <= 0 {
+		return defaultCancellationDelaySeconds
+	}
+
+	delay, err := strconv.Atoi(delayStr)
+	if err != nil {
+		log.Warn("well: set default cancellation delay seconds", map[string]interface{}{
+			"env":       delayStr,
+			"delay":     defaultCancellationDelaySeconds,
+			log.FnError: err,
+		})
+		return defaultCancellationDelaySeconds
+	}
+	if delay < 0 {
+		log.Warn("well: round up negative cancellation delay seconds to 0s", map[string]interface{}{
+			"env":       delayStr,
+			"delay":     0,
+			log.FnError: err,
+		})
+		return 0
+	}
+	return delay
 }
