@@ -144,7 +144,7 @@ func ping(network, addr string) error {
 		"data": string(data),
 	})
 
-	if time.Since(st) > time.Second {
+	if time.Since(st) > 6*time.Second {
 		return errors.New("too long")
 	}
 	return nil
