@@ -136,7 +136,7 @@ func ping(network, addr string) error {
 	}
 	if string(data) != "hello 1" {
 		log.Error("wrong response", map[string]interface{}{
-			"data": data,
+			"data": string(data),
 		})
 		return errors.New("invalid response")
 	}

@@ -16,7 +16,7 @@ jobs:
       - run: go vet .
       - run: |
           go build ./test/restart
-          ./restart
+          CANCELLATION_DELAY_SECONDS=0 ./restart
       - run: |
           cd ./test/spf13
           cp main.go_ main.go
