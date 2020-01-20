@@ -31,10 +31,11 @@ func handleSignal(env *Environment) {
 
 	go func() {
 		s := <-ch
+		delay := getDelaySecondsFromEnv()
 		log.Warn("well: got signal", map[string]interface{}{
 			"signal": s.String(),
+			"delay":  delay,
 		})
-		delay := getDelaySecondsFromEnv()
 		time.Sleep(time.Duration(delay) * time.Second)
 		env.Cancel(errSignaled)
 	}()
