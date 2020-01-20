@@ -42,7 +42,7 @@ func handleSignal(env *Environment) {
 
 func getDelaySecondsFromEnv() int {
 	delayStr := os.Getenv(cancellationDelaySecondsEnv)
-	if len(delayStr) <= 0 {
+	if len(delayStr) == 0 {
 		return defaultCancellationDelaySeconds
 	}
 
@@ -57,9 +57,8 @@ func getDelaySecondsFromEnv() int {
 	}
 	if delay < 0 {
 		log.Warn("well: round up negative cancellation delay seconds to 0s", map[string]interface{}{
-			"env":       delayStr,
-			"delay":     0,
-			log.FnError: err,
+			"env":   delayStr,
+			"delay": 0,
 		})
 		return 0
 	}
