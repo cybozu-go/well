@@ -53,8 +53,7 @@ func handleSigPipe() {
 	}
 
 	// signal.Ignore does NOT ignore signals; instead, it just stop
-	// relaying signals to the channel.  Instead, we use an unbuffered
-	// channel to discard SIGPIPE.
-	c := make(chan os.Signal)
+	// relaying signals to the channel.  Instead, we set a nop handler.
+	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGPIPE)
 }
