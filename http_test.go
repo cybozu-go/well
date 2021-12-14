@@ -395,7 +395,7 @@ func TestHTTPClient(t *testing.T) {
 	logger.SetThreshold(log.LvDebug)
 
 	req = req.WithContext(ctx)
-	resp, err = cl.Do(req)
+	_, err = cl.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}

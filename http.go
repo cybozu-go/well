@@ -84,7 +84,6 @@ type StdResponseWriter interface {
 	http.ResponseWriter
 	io.ReaderFrom
 	http.Flusher
-	http.CloseNotifier
 	http.Hijacker
 	WriteString(data string) (int, error)
 }
@@ -96,7 +95,6 @@ type StdResponseWriter interface {
 type StdResponseWriter2 interface {
 	http.ResponseWriter
 	http.Flusher
-	http.CloseNotifier
 	http.Pusher
 	WriteString(data string) (int, error)
 }
