@@ -1,0 +1,39 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches:
+    - 'main'
+env:
+  go-version: 1.17
+  cache-version: 1
+jobs:
+  test:
+    name: Small tests
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.go-version }}
+    - run: test -z "$(gofmt -s -l . | tee /dev/stderr)"
+    - run: GOOS=windows go build .
+    - run: go build .
+    - run: go test -race -v .
+    - run: go vet .
+    - name: staticcheck
+      run: |
+        mkdir -p bin
+        GOBIN=$(pwd)/bin go install honnef.co/go/tools/cmd/staticcheck@latest
+        ./bin/staticcheck .
+    - name: Restart test
+      run: |
+        go build ./test/restart
+        CANCELLATION_DELAY_SECONDS=0 ./restart
+    - name: Config test
+      run: |
+        cd ./test/spf13
+        cp main.go_ main.go
+        cp root.go_ root.go
+        go build .
+        ./spf13 --config=.spf13.yml --loglevel=critical
