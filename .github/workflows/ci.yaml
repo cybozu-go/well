@@ -33,7 +33,5 @@ jobs:
     - name: Config test
       run: |
         cd ./test/spf13
-        cp main.go_ main.go
-        cp root.go_ root.go
         go build .
         ./spf13 --config=.spf13.yml --loglevel=critical
