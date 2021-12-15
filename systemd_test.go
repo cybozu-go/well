@@ -16,6 +16,13 @@ func TestIsSystemdService(t *testing.T) {
 		return
 	}
 
+	if os.Getenv("GITHUB_ACTIONS") == "true" {
+		if !IsSystemdService() {
+			t.Error(`GitHub Actions is run as a systemd service`)
+		}
+		return
+	}
+
 	if IsSystemdService() {
 		t.Error(`IsSystemdService()`)
 	}

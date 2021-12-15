@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 package well
@@ -119,7 +120,6 @@ func (g *Graceful) Run() {
 
 	// child process should not return.
 	os.Exit(0)
-	return
 }
 
 // runMaster is the main function of the master process.

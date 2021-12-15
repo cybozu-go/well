@@ -30,6 +30,3 @@ _testmain.go
 *.prof
 
 /restart
-
-# ignore go.sum
-/go.sum
