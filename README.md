@@ -1,6 +1,6 @@
 [![GitHub release](https://img.shields.io/github/release/cybozu-go/well.svg?maxAge=60)][releases]
-[![GoDoc](https://godoc.org/github.com/cybozu-go/well?status.svg)][godoc]
-[![CircleCI](https://circleci.com/gh/cybozu-go/well.svg?style=svg)](https://circleci.com/gh/cybozu-go/well)
+[![CI](https://github.com/cybozu-go/well/actions/workflows/ci.yaml/badge.svg)](https://github.com/cybozu-go/well/actions/workflows/ci.yaml)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/cybozu-go/well)](https://pkg.go.dev/github.com/cybozu-go/well)
 [![Go Report Card](https://goreportcard.com/badge/github.com/cybozu-go/well)](https://goreportcard.com/report/github.com/cybozu-go/well)
 
 Go Command Framework
@@ -102,7 +102,7 @@ Commands using this framework implement these external specifications:
 Usage
 -----
 
-Read [Tutorial][wiki], [the design notes](DESIGN.md) and [godoc][].
+Read [Tutorial][wiki], [the design notes](DESIGN.md) and [API documents](https://pkg.go.dev/github.com/cybozu-go/well).
 
 A [wiki page for cobra users](https://github.com/cybozu-go/well/wiki/Use-with-spf13-cobra) is also available.
 
@@ -117,13 +117,6 @@ Real world examples
 
 Pull requests are welcome to add your project to this list!
 
-License
--------
-
-[MIT][]
-
 [releases]: https://github.com/cybozu-go/well/releases
-[godoc]: https://godoc.org/github.com/cybozu-go/well
 [wiki]: https://github.com/cybozu-go/well/wiki/Tutorial
 [cobra]: https://github.com/spf13/cobra
-[MIT]: https://opensource.org/licenses/MIT

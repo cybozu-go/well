@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.11.0] - 2021-12-15
+
+### Changed
+- Update dependencies (#39).
+
+### Removed
+- The wrapped `http.ResponseWriter` no longer implements `http.CloseNotifier` (#39).
+
 ## [1.10.0] - 2020-01-24
 ### Added
 - Getter for requestIDHeader (#35).
@@ -101,7 +109,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Conform to cybozu-go/log v1.1.0 spec.
 
 [activation]: http://0pointer.de/blog/projects/socket-activation.html
-[Unreleased]: https://github.com/cybozu-go/cmd/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/cybozu-go/cmd/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/cybozu-go/cmd/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/cybozu-go/cmd/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/cybozu-go/cmd/compare/v1.8.1...v1.9.0
 [1.8.1]: https://github.com/cybozu-go/cmd/compare/v1.8.0...v1.8.1
