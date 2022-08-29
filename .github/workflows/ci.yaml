@@ -5,15 +5,15 @@ on:
     branches:
     - 'main'
 env:
-  go-version: 1.17
+  go-version: 1.18
   cache-version: 1
 jobs:
   test:
     name: Small tests
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
       with:
         go-version: ${{ env.go-version }}
     - run: test -z "$(gofmt -s -l . | tee /dev/stderr)"

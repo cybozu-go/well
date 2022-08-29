@@ -5,6 +5,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Update dependencies (#40).
+
 ## [1.11.0] - 2021-12-15
 
 ### Changed
