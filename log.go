@@ -60,9 +60,10 @@ type LogConfig struct {
 // When used with github.com/spf13/{pflag,viper}, pflag values are
 // bound to viper database, and Apply look for following keys
 // in the viper database:
-//     - log.file
-//     - log.level
-//     - log.format
+//   - log.file
+//   - log.level
+//   - log.format
+//
 // If they are not empty, they take precedence over the struct member values.
 func (c LogConfig) Apply() error {
 	logger := log.DefaultLogger()
