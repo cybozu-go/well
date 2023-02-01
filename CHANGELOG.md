@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.11.2] - 2023-02-01
+
 ### Changed
 - Update dependencies in [#43](https://github.com/cybozu-go/well/pull/43)
     - Upgrade direct dependencies in go.mod
@@ -121,7 +123,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Conform to cybozu-go/log v1.1.0 spec.
 
 [activation]: http://0pointer.de/blog/projects/socket-activation.html
-[Unreleased]: https://github.com/cybozu-go/cmd/compare/v1.11.1...HEAD
+[Unreleased]: https://github.com/cybozu-go/cmd/compare/v1.11.2...HEAD
+[1.11.2]: https://github.com/cybozu-go/cmd/compare/v1.11.1...v1.11.2
 [1.11.1]: https://github.com/cybozu-go/cmd/compare/v1.11.0...v1.11.1
 [1.11.0]: https://github.com/cybozu-go/cmd/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/cybozu-go/cmd/compare/v1.9.0...v1.10.0
