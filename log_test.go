@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
-	"io/ioutil"
+	"io"
 	"os"
 	"syscall"
 	"testing"
@@ -107,7 +107,7 @@ func TestLogFlags(t *testing.T) {
 		Format:   "json",
 	}
 
-	f, err := ioutil.TempFile("", "gotest")
+	f, err := os.CreateTemp("", "gotest")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +143,7 @@ func TestLogFlags(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, err := ioutil.ReadAll(g)
+	data, err := io.ReadAll(g)
 	if err != nil {
 		t.Fatal(err)
 	}

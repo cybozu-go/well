@@ -5,32 +5,39 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Update dependencies in [#43](https://github.com/cybozu-go/well/pull/43)
+    - Upgrade direct dependencies in go.mod
+    - Update Golang used for testing from 1.18 to 1.19
+    - Update GitHub Actions
+- Fix for deprecated "io/ioutil" in [#43](https://github.com/cybozu-go/well/pull/43)
+
 ## [1.11.1] - 2022-08-30
 
 ### Changed
-- Update dependencies (#40).
+- Update dependencies ([#40](https://github.com/cybozu-go/well/pull/40)).
 
 ## [1.11.0] - 2021-12-15
 
 ### Changed
-- Update dependencies (#39).
+- Update dependencies ([#39](https://github.com/cybozu-go/well/pull/39)).
 
 ### Removed
-- The wrapped `http.ResponseWriter` no longer implements `http.CloseNotifier` (#39).
+- The wrapped `http.ResponseWriter` no longer implements `http.CloseNotifier` ([#39](https://github.com/cybozu-go/well/pull/39)).
 
 ## [1.10.0] - 2020-01-24
 ### Added
-- Getter for requestIDHeader (#35).
+- Getter for requestIDHeader ([#35](https://github.com/cybozu-go/well/pull/35)).
 
 ### Changed
-- Sleep for some seconds after signal handler receives a signal (#37).
+- Sleep for some seconds after signal handler receives a signal ([#37](https://github.com/cybozu-go/well/pull/37)).
 
 ## [1.9.0] - 2019-09-24
 ### Added
-- HTTPServer: add support for HTTP/2 request handling (#27, #32).
+- HTTPServer: add support for HTTP/2 request handling ([#27](https://github.com/cybozu-go/well/pull/27), [#32](https://github.com/cybozu-go/well/pull/32)).
 
 ### Changed
-- HTTPServer: fix remote IP access logging (#31).
+- HTTPServer: fix remote IP access logging ([#31](https://github.com/cybozu-go/well/pull/31)).
 
 ## [1.8.1] - 2018-10-21
 ### Changed
@@ -38,11 +45,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [1.8.0] - 2018-10-21
 ### Added
-- Support for users of [github.com/spf13/cobra](https://github.com/spf13/cobra) and its friends (#24).
+- Support for users of [github.com/spf13/cobra](https://github.com/spf13/cobra) and its friends ([#24](https://github.com/cybozu-go/well/pull/24)).
 
 ## [1.7.0] - 2018-10-20
 ### Changed
-- Use http.Server.Shutdown for Go 1.8+ (#23).
+- Use http.Server.Shutdown for Go 1.8+ ([#23](https://github.com/cybozu-go/well/pull/23)).
 - Rename the project from `cmd` to `well`.
 - Remove dependency on `github.com/pkg/errors`.
 
@@ -55,16 +62,16 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - `IsSystemdService` to detect if running as a systemd service.
 
 ### Changed
-- Ignore SIGPIPE for systemd, reverts #15 (#17).
+- Ignore SIGPIPE for systemd, reverts [#15](https://github.com/cybozu-go/well/pull/15) ([#17](https://github.com/cybozu-go/well/pull/17)).
 
 ## [1.4.2] - 2017-04-26
 ### Changed
-- Exit abnormally upon SIGPIPE (#15).
+- Exit abnormally upon SIGPIPE ([#15](https://github.com/cybozu-go/well/pull/15)).
 
 ## [1.4.1] - 2017-03-01
 ### Changed
 - Fix `NewEnvironment` documentation.
-- Ignore SIGPIPE for systemd (#13).
+- Ignore SIGPIPE for systemd ([#13](https://github.com/cybozu-go/well/pull/13)).
 
 ## [1.4.0] - 2016-09-10
 ### Added

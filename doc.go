@@ -17,7 +17,7 @@ Signal handlers:
 The framework installs SIGINT/SIGTERM signal handlers for
 graceful exit, and SIGUSR1 signal handler to reopen log files.
 
-Environment
+Environment:
 
 Environment is the heart of the framework.  It provides a base
 context.Context that will be canceled before program stops, and

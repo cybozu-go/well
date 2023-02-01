@@ -5,12 +5,11 @@ on:
     branches:
     - 'main'
 env:
-  go-version: 1.18
-  cache-version: 1
+  go-version: 1.19
 jobs:
   test:
     name: Small tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-go@v3
@@ -28,10 +27,14 @@ jobs:
         ./bin/staticcheck .
     - name: Restart test
       run: |
+        go vet ./test/restart
+        ./bin/staticcheck ./test/restart
         go build ./test/restart
         CANCELLATION_DELAY_SECONDS=0 ./restart
     - name: Config test
       run: |
         cd ./test/spf13
+        go vet .
+        ../../bin/staticcheck .
         go build .
         ./spf13 --config=.spf13.yml --loglevel=critical

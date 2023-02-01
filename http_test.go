@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"runtime"
 	"testing"
@@ -105,7 +104,7 @@ func TestHTTPServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, _ := ioutil.ReadAll(resp.Body)
+	data, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("%d %s", resp.StatusCode, string(data))
@@ -126,7 +125,7 @@ func TestHTTPServer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, _ = ioutil.ReadAll(resp.Body)
+	data, _ = io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("%d %s", resp.StatusCode, string(data))
@@ -180,7 +179,7 @@ func TestHTTPServer2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, _ := ioutil.ReadAll(resp.Body)
+	data, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("%d %s", resp.StatusCode, string(data))
@@ -201,7 +200,7 @@ func TestHTTPServer2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, _ = ioutil.ReadAll(resp.Body)
+	data, _ = io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("%d %s", resp.StatusCode, string(data))
@@ -312,7 +311,7 @@ func TestHTTPServerTimeout(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data, _ := ioutil.ReadAll(resp.Body)
+	data, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("%d %s", resp.StatusCode, string(data))

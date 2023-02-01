@@ -48,9 +48,9 @@ func RequestIDHeader() string {
 // This struct overrides Serve and ListenAndServe* methods.
 //
 // http.Server members are replaced as following:
-//    - Handler is replaced with a wrapper handler that logs requests.
-//    - ReadTimeout is set to 30 seconds if it is zero.
-//    - ConnState is replaced with the one provided by the framework.
+//   - Handler is replaced with a wrapper handler that logs requests.
+//   - ReadTimeout is set to 30 seconds if it is zero.
+//   - ConnState is replaced with the one provided by the framework.
 type HTTPServer struct {
 	*http.Server
 
