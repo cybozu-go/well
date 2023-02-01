@@ -27,10 +27,14 @@ jobs:
         ./bin/staticcheck .
     - name: Restart test
       run: |
+        go vet ./test/restart
+        ./bin/staticcheck ./test/restart
         go build ./test/restart
         CANCELLATION_DELAY_SECONDS=0 ./restart
     - name: Config test
       run: |
         cd ./test/spf13
+        go vet .
+        ../../bin/staticcheck .
         go build .
         ./spf13 --config=.spf13.yml --loglevel=critical

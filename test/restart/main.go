@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"io/ioutil"
+	"io"
 	"net"
 	"os"
 	"runtime"
@@ -22,7 +22,7 @@ var (
 )
 
 func getTemporaryFilename() string {
-	f, err := ioutil.TempFile("", "gotest")
+	f, err := os.CreateTemp("", "gotest")
 	if err != nil {
 		log.ErrorExit(err)
 	}
@@ -130,7 +130,7 @@ func ping(network, addr string) error {
 	defer conn.Close()
 
 	st := time.Now()
-	data, err := ioutil.ReadAll(conn)
+	data, err := io.ReadAll(conn)
 	if err != nil {
 		return err
 	}
