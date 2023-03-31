@@ -1,6 +1,9 @@
 /*
-Package well provides a framework that helps implementation of
-commands having these features:
+Package well provides a framework that helps implementation of commands.
+
+Deprecated: This project has come to an end and will not receive any update.
+
+Features:
 
 Better logging:
 

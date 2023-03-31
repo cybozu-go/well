@@ -6,6 +6,8 @@
 Go Command Framework
 ====================
 
+**Deprecated: This project has come to an end and will not receive any update.**
+
 This is a framework to create well-behaving commands.
 
 Features
