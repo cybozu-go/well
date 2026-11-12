@@ -1,6 +1,6 @@
 module github.com/cybozu-go/well
 
-go 1.19
+go 1.25.0
 
 require (
 	github.com/BurntSushi/toml v1.2.1
@@ -8,7 +8,7 @@ require (
 	github.com/cybozu-go/netutil v1.4.4
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
-	golang.org/x/net v0.7.0
+	golang.org/x/net v0.55.0
 )
 
 require (
@@ -24,8 +24,8 @@ require (
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/vishvananda/netlink v1.2.1-beta.2 // indirect
 	github.com/vishvananda/netns v0.0.3 // indirect
-	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
